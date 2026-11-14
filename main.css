@@ -96,9 +96,10 @@ button{
     box-shadow:inset 3px 0 var(--green)
 }
 .nav .ico{
-    width:19px;
+    width:16px;
+    height: 16px;
     text-align:center;
-    font-size:16px
+    margin-right: 10px;
 }
 .sidebar-bottom{
     margin-top:auto;
@@ -264,11 +265,10 @@ button{
     height:32px;
     border-radius:10px;
     background:#203b38;
-    color:var(--green);
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:16px
+    padding:4px;
 }
 .stat strong{
     display:block;
@@ -390,11 +390,12 @@ button{
     height:31px;
     border-radius:10px;
     background:#20372f;
-    color:var(--green);
     display:flex;
     align-items:center;
     justify-content:center;
-    flex:none
+    flex:none;
+    padding: 2px;
+
 }
 .activity-item strong{
     display:block;
