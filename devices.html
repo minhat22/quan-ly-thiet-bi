@@ -16,12 +16,12 @@
   <div class="brand"><div class="brand-mark">G</div><div><strong>GearFlow</strong><small>EQUIPMENT MANAGER</small></div></div>
   <div class="nav-label">TỔNG QUAN</div>
   <nav class="nav">
-    <a href="main.html" data-page="dashboard"><span class="ico">▦</span><span class="nav-text">Dashboard</span></a>
+    <a href="main.html" data-page="trangchu"><span class="ico">▦</span><span class="nav-text">Trang chủ</span></a>
   </nav>
   <div class="nav-label">QUẢN LÝ</div>
   <nav class="nav">
     <a class="active" href="devices.html" data-page="devices"><span class="ico">▣</span><span class="nav-text">Thiết bị</span></a>
-    <a href="customers.html" data-page="borrowers"><span class="ico">♙</span><span class="nav-text">Người mượn</span></a>
+    <a href="customers.html" data-page="customers"><span class="ico">♙</span><span class="nav-text">Người mượn</span></a>
     <a href="history.html" data-page="loans"><span class="ico">⇄</span><span class="nav-text">Phiếu mượn</span></a>
     <a href="observe.html" data-page="returns"><span class="ico">↩</span><span class="nav-text">Theo dõi trả</span></a>
   </nav>
@@ -29,7 +29,45 @@
 </aside>
 <main class="main">
   <div class="topbar"><div class="crumb">Workspace <span style="color:#53677d">/</span> <b id="crumb">Thiết bị</b></div><div class="top-right"><div class="date-chip" id="today"></div><div class="user-chip"><div class="avatar">AD</div><span>Quản trị viên</span>⌄</div></div></div>
-  <section id="page"></section>
+  <section id="page">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">ASSET MANAGEMENT / 02</div>
+        <h1>Quản lý thiết bị</h1>
+        <p>Quản lý danh mục, số lượng và tình trạng thiết bị.</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('device')">＋ Thêm thiết bị</button>
+    </div>
+
+    <div class="panel">
+      <div class="toolbar">
+        <div class="search">
+          <input id="searchBox" placeholder="Tìm tên hoặc loại thiết bị..." oninput="filterRows()">
+        </div>
+        <select id="filterStatus" onchange="filterRows()">
+          <option value="">Tất cả tình trạng</option>
+          <option>Sẵn sàng</option>
+          <option>Đang cho mượn</option>
+          <option>Bảo trì</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+            <th>THIẾT BỊ</th>
+            <th>MÃ ID</th>
+            <th>LOẠI</th>
+            <th>SỐ LƯỢNG</th>
+            <th>TÌNH TRẠNG</th>
+            <th>THAO TÁC</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 </main>
 </div>
 <div class="modal-backdrop" id="modalBackdrop"><div class="modal"><div class="modal-head"><h3 id="modalTitle">Thêm mới</h3><button class="close" onclick="closeModal()">×</button></div><form id="modalForm"><div id="modalFields" class="form-grid"></div><div class="modal-actions"><button type="button" class="btn btn-ghost" onclick="closeModal()">Hủy</button><button class="btn btn-primary" type="submit">Lưu thông tin</button></div></form></div></div>

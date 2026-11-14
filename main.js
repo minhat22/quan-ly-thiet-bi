@@ -48,7 +48,7 @@ const seed = {
     ],
 
     // Danh sach nguoi muon
-    borrowers: [
+    customer: [
         {
             id: 1,
             name: 'Nguyễn Minh Anh',
@@ -122,6 +122,12 @@ if (savedData !== null) {
     data = seed;
 }
 
+// Du lieu cu (truoc khi doi ten) co the van luu bang khoa 'borrowers'
+if (data.borrowers && !data.customer) {
+    data.customer = data.borrowers;
+    delete data.borrowers;
+}
+
 // Trang hien tai dang duoc chon
 let currentPage = document.body.dataset.page;
 
@@ -185,907 +191,223 @@ function statusClass(status) {
 }
 
 
-// Ham tao phan tieu de cho moi trang
-function head(kicker, title, description, button = '') {
-
-    return `
-        <div class="page-head">
-
-            <div>
-                <div class="eyebrow">${kicker}</div>
-
-                <h1>${title}</h1>
-
-                <p>${description}</p>
-            </div>
-
-            ${button}
-
-        </div>
-    `;
-}
-
-
-// Ham tao the thong ke tren Dashboard
-function stat(label, value, icon, note, color = 'var(--green)') {
-
-    return `
-        <div class="stat" style="--glow:${color}">
-
-            <div class="stat-top">
-                <span>${label}</span>
-                <span class="stat-icon">${icon}</span>
-            </div>
-
-            <strong>${value}</strong>
-
-            <small>${note}</small>
-
-        </div>
-    `;
-}
-
-
-// ==========================================
-// 4. TRANG TONG QUAN DASHBOARD
-// ==========================================
-
-function dashboard() {
-
-    // Tinh tong so luong thiet bi
-    let total = 0;
-
-    data.devices.forEach(function (device) {
-        total += Number(device.qty);
-    });
-
-    // Dem so phieu dang muon
-    let active = data.loans.filter(function (loan) {
-        return loan.status === 'Đang mượn';
-    }).length;
-
-    // Dem so phieu qua han
-    let overdue = data.loans.filter(function (loan) {
-        return loan.status === 'Quá hạn';
-    }).length;
-
-    // Dem so loai thiet bi dang san sang
-    let ready = data.devices.filter(function (device) {
-        return device.status === 'Sẵn sàng';
-    }).length;
-
-
-    // Tao noi dung trang Dashboard
-    return head(
-        'OVERVIEW / 01',
-        'Tổng quan hệ thống',
-        'Theo dõi nhanh tình hình thiết bị và hoạt động mượn – trả.',
-        '<button class="btn btn-primary" onclick="openModal(\'loan\')">＋ Tạo phiếu mượn</button>'
-    )
-
-    + `
-
-        <div class="stats">
-
-            ${stat(
-                'Tổng số thiết bị',
-                total,
-                '▣',
-                'Trong kho và đang lưu hành'
-            )}
-
-            ${stat(
-                'Phiếu đang mượn',
-                active,
-                '⇄',
-                'Cần theo dõi lịch trả',
-                'var(--blue)'
-            )}
-
-            ${stat(
-                'Thiết bị sẵn sàng',
-                ready,
-                '✓',
-                'Có thể đăng ký mượn'
-            )}
-
-            ${stat(
-                'Phiếu quá hạn',
-                overdue,
-                '◷',
-                'Cần xử lý ngay',
-                'var(--red)'
-            )}
-
-        </div>
-
-
-        <div class="grid-main">
-
-            <div class="panel">
-
-                <div class="panel-head">
-
-                    <div>
-                        <h3>Hoạt động mượn thiết bị</h3>
-                        <p>Biểu đồ minh họa số lượt mượn trong 6 tháng</p>
-                    </div>
-
-                    <span class="status green">+12.8%</span>
-
-                </div>
-
-                <div class="chart">
-
-                    ${[38, 56, 45, 72, 61, 88].map(function (value, index) {
-
-                        let months = ['T5', 'T6', 'T7', 'T8', 'T9', 'T10'];
-
-                        return `
-                            <div class="bar-group">
-
-                                <div class="bar" style="height:${value}%"></div>
-
-                                <div class="bar alt"
-                                    style="height:${Math.max(10, value - 22)}%">
-                                </div>
-
-                                <span class="bar-label">${months[index]}</span>
-
-                            </div>
-                        `;
-
-                    }).join('')}
-
-                </div>
-
-                <div class="chart-legend">
-                    <span><i class="legend-dot"></i>Lượt mượn</span>
-                    <span><i class="legend-dot blue"></i>Lượt trả</span>
-                </div>
-
-            </div>
-
-
-            <div class="panel">
-
-                <div class="panel-head">
-
-                    <div>
-                        <h3>Hoạt động gần đây</h3>
-                        <p>Cập nhật trong hệ thống</p>
-                    </div>
-
-                    <span style="color:var(--green)">•••</span>
-
-                </div>
-
-
-                <div class="activity">
-
-                    <div class="activity-item">
-
-                        <div class="activity-icon">＋</div>
-
-                        <div>
-                            <strong>Tạo phiếu mượn mới</strong>
-                            <p>Nguyễn Minh Anh · 2 Laptop Dell</p>
-                            <time>Hôm nay, 09:15</time>
-                        </div>
-
-                    </div>
-
-
-                    <div class="activity-item">
-
-                        <div class="activity-icon">↩</div>
-
-                        <div>
-                            <strong>Thiết bị được hoàn trả</strong>
-                            <p>Lê Thảo Vy · Bộ Arduino Uno</p>
-                            <time>Hôm qua, 15:40</time>
-                        </div>
-
-                    </div>
-
-
-                    <div class="activity-item">
-
-                        <div class="activity-icon">!</div>
-
-                        <div>
-                            <strong>Phiếu mượn sắp quá hạn</strong>
-                            <p>Trần Hoàng Nam · Máy chiếu Epson</p>
-                            <time>Hôm qua, 08:30</time>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="lower-grid">
-
-            <div class="panel">
-
-                <div class="panel-head">
-
-                    <div>
-                        <h3>Phiếu mượn gần đây</h3>
-                        <p>Danh sách giao dịch mới nhất</p>
-                    </div>
-
-                    <button class="text-link" onclick="go('loans')">
-                        Xem tất cả →
-                    </button>
-
-                </div>
-
-                ${loanTable(data.loans.slice(0, 4))}
-
-            </div>
-
-
-            <div class="panel">
-
-                <div class="panel-head">
-
-                    <div>
-                        <h3>Thao tác nhanh</h3>
-                        <p>Truy cập chức năng thường dùng</p>
-                    </div>
-
-                </div>
-
-
-                <div class="quick-grid">
-
-                    <button class="quick" onclick="go('devices')">
-                        <span>▣</span>
-                        <b>Quản lý thiết bị</b>
-                        <small>Thêm và cập nhật kho</small>
-                    </button>
-
-                    <button class="quick" onclick="go('borrowers')">
-                        <span>♙</span>
-                        <b>Người mượn</b>
-                        <small>Thông tin cá nhân</small>
-                    </button>
-
-                    <button class="quick" onclick="openModal('loan')">
-                        <span>⇄</span>
-                        <b>Tạo phiếu mượn</b>
-                        <small>Ghi nhận giao dịch</small>
-                    </button>
-
-                    <button class="quick" onclick="go('returns')">
-                        <span>↩</span>
-                        <b>Theo dõi trả</b>
-                        <small>Kiểm tra hạn trả</small>
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    `;
-}
-
-
-// ==========================================
-// 5. HIEN THI BANG PHIEU MUON GAN DAY
-// ==========================================
-
-function loanTable(rows) {
-
-    // Kiem tra danh sach co du lieu hay khong
-    if (rows.length === 0) {
-        return `
-            <div class="empty">
-                <div>▤</div>
-                Chưa có phiếu mượn
-            </div>
-        `;
+// Ham gan chu/so vao mot phan tu theo id (bo qua neu trang khong co phan tu do)
+function setText(id, value) {
+    let element = document.getElementById(id);
+
+    if (element !== null) {
+        element.textContent = value;
     }
-
-    return `
-
-        <div class="table-wrap">
-
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>MÃ PHIẾU</th>
-                        <th>NGƯỜI MƯỢN</th>
-                        <th>THIẾT BỊ</th>
-                        <th>HẠN TRẢ</th>
-                        <th>TRẠNG THÁI</th>
-                    </tr>
-                </thead>
-
-
-                <tbody>
-
-                    ${rows.map(function (loan) {
-
-                        return `
-                            <tr>
-
-                                <td>#${loan.id}</td>
-
-                                <td>${loan.borrower}</td>
-
-                                <td>${loan.device} × ${loan.qty}</td>
-
-                                <td>${loan.dueDate}</td>
-
-                                <td>
-                                    <span class="status ${statusClass(loan.status)}">
-                                        ${loan.status}
-                                    </span>
-                                </td>
-
-                            </tr>
-                        `;
-
-                    }).join('')}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    `;
 }
 
-// ==========================================
-// 6. TRANG QUAN LY THIET BI
-// ==========================================
 
-function devicesPage() {
+// Ham do cac dong du lieu vao <tbody id="tableBody"> cua trang
+// Khung bang (<table>, <thead>) da viet san trong file HTML.
+// Neu rows rong thi tbody rong -> bang van hien nhung khong co dong nao.
+function fillRows(html) {
+    let body = document.getElementById('tableBody');
 
-    return head(
-        'ASSET MANAGEMENT / 02',
-        'Quản lý thiết bị',
-        'Quản lý danh mục, số lượng và tình trạng thiết bị.',
-        '<button class="btn btn-primary" onclick="openModal(\'device\')">＋ Thêm thiết bị</button>'
-    )
-
-    + `
-
-        <div class="panel">
-
-            <div class="toolbar">
-
-                <div class="search">
-                    <input
-                        id="searchBox"
-                        placeholder="Tìm tên hoặc loại thiết bị..."
-                        oninput="filterRows()"
-                    >
-                </div>
-
-                <select id="filterStatus" onchange="filterRows()">
-
-                    <option value="">Tất cả tình trạng</option>
-
-                    <option>Sẵn sàng</option>
-
-                    <option>Đang cho mượn</option>
-
-                    <option>Bảo trì</option>
-
-                </select>
-
-            </div>
-
-            <div id="tableArea">
-                ${deviceTable(data.devices)}
-            </div>
-
-        </div>
-
-    `;
+    if (body !== null) {
+        body.innerHTML = html;
+    }
 }
 
 
 // ==========================================
-// 7. HIEN THI DANH SACH THIET BI
+// 4. TAO CAC DONG DU LIEU (<tr>) CHO BANG
 // ==========================================
+// Cac ham duoi day CHI tao cac dong <tr>, khong tao <table>.
 
-function deviceTable(rows) {
+// Dong cua bang "Phieu muon gan day" (Trang chu)
+function loanRows(rows) {
 
-    return `
+    return rows.map(function (loan) {
 
-        <div class="table-wrap">
+        return `
+            <tr>
+                <td>#${loan.id}</td>
+                <td>${loan.borrower}</td>
+                <td>${loan.device} × ${loan.qty}</td>
+                <td>${loan.dueDate}</td>
+                <td>
+                    <span class="status ${statusClass(loan.status)}">${loan.status}</span>
+                </td>
+            </tr>
+        `;
 
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>THIẾT BỊ</th>
-                        <th>MÃ ID</th>
-                        <th>LOẠI</th>
-                        <th>SỐ LƯỢNG</th>
-                        <th>TÌNH TRẠNG</th>
-                        <th>THAO TÁC</th>
-                    </tr>
-                </thead>
+    }).join('');
+}
 
 
-                <tbody>
+// Dong cua bang thiet bi
+function deviceRows(rows) {
 
-                    ${rows.map(function (device) {
+    return rows.map(function (device) {
 
-                        return `
-                            <tr>
+        return `
+            <tr>
+                <td>
+                    <div class="device-cell">
+                        <div class="device-pic">${device.icon || '▣'}</div>
+                        <div>
+                            <b>${device.name}</b>
+                            <small>Kho thiết bị GearFlow</small>
+                        </div>
+                    </div>
+                </td>
+                <td>TB-${String(device.id).padStart(3, '0')}</td>
+                <td>${device.type}</td>
+                <td>${device.qty}</td>
+                <td>
+                    <span class="status ${statusClass(device.status)}">${device.status}</span>
+                </td>
+                <td>
+                    <button class="action-btn" onclick="editItem('device', ${device.id})">Sửa</button>
+                    <button class="action-btn" onclick="deleteItem('device', ${device.id})">Xóa</button>
+                </td>
+            </tr>
+        `;
 
-                                <td>
-                                    <div class="device-cell">
+    }).join('');
+}
 
-                                        <div class="device-pic">
-                                            ${device.icon || '▣'}
-                                        </div>
 
-                                        <div>
-                                            <b>${device.name}</b>
-                                            <small>Kho thiết bị GearFlow</small>
-                                        </div>
+// Dong cua bang nguoi muon
+function borrowerRows(rows) {
 
-                                    </div>
-                                </td>
+    return rows.map(function (borrower) {
 
-                                <td>
-                                    TB-${String(device.id).padStart(3, '0')}
-                                </td>
+        // Lay chu cai dau cua hai tu cuoi trong ho ten
+        let words = borrower.name.split(' ');
+        let avatar = words.slice(-2).map(function (word) {
+            return word[0];
+        }).join('');
 
-                                <td>${device.type}</td>
+        return `
+            <tr>
+                <td>
+                    <div class="device-cell">
+                        <div class="avatar">${avatar}</div>
+                        <b>${borrower.name}</b>
+                    </div>
+                </td>
+                <td>NM-${String(borrower.id).padStart(3, '0')}</td>
+                <td>${borrower.unit}</td>
+                <td>${borrower.phone}</td>
+                <td>
+                    <button class="action-btn" onclick="editItem('borrower', ${borrower.id})">Sửa</button>
+                    <button class="action-btn" onclick="deleteItem('borrower', ${borrower.id})">Xóa</button>
+                </td>
+            </tr>
+        `;
 
-                                <td>${device.qty}</td>
+    }).join('');
+}
 
-                                <td>
-                                    <span class="status ${statusClass(device.status)}">
-                                        ${device.status}
-                                    </span>
-                                </td>
 
-                                <td>
+// Dong cua bang phieu muon day du (trang Phieu muon va Theo doi tra)
+function fullLoanRows(rows) {
 
-                                    <button
-                                        class="action-btn"
-                                        onclick="editItem('device', ${device.id})"
-                                    >
-                                        Sửa
-                                    </button>
+    return rows.map(function (loan) {
 
-                                    <button
-                                        class="action-btn"
-                                        onclick="deleteItem('device', ${device.id})"
-                                    >
-                                        Xóa
-                                    </button>
+        let action = '—';
 
-                                </td>
+        if (loan.status !== 'Đã trả') {
+            action = `<button class="action-btn" onclick="markReturned(${loan.id})">Xác nhận trả</button>`;
+        }
 
-                            </tr>
-                        `;
+        return `
+            <tr>
+                <td>#${loan.id}</td>
+                <td>${loan.borrower}</td>
+                <td>${loan.device}</td>
+                <td>${loan.qty}</td>
+                <td>${loan.borrowDate}</td>
+                <td>${loan.dueDate}</td>
+                <td>
+                    <span class="status ${statusClass(loan.status)}">${loan.status}</span>
+                </td>
+                <td>${action}</td>
+            </tr>
+        `;
 
-                    }).join('')}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    `;
+    }).join('');
 }
 
 
 // ==========================================
-// 8. TRANG QUAN LY NGUOI MUON
+// 5. HAM DO DU LIEU VAO TRANG
 // ==========================================
-
-function borrowersPage() {
-
-    return head(
-        'PEOPLE / 03',
-        'Quản lý người mượn',
-        'Lưu trữ thông tin cá nhân và đơn vị công tác.',
-        '<button class="btn btn-primary" onclick="openModal(\'borrower\')">＋ Thêm người mượn</button>'
-    )
-
-    + `
-
-        <div class="panel">
-
-            <div class="toolbar">
-
-                <div class="search">
-
-                    <input
-                        id="searchBox"
-                        placeholder="Tìm họ tên, đơn vị, số điện thoại..."
-                        oninput="filterRows()"
-                    >
-
-                </div>
-
-            </div>
-
-            <div id="tableArea">
-                ${borrowerTable(data.borrowers)}
-            </div>
-
-        </div>
-
-    `;
-}
-
-
-// ==========================================
-// 9. HIEN THI DANH SACH NGUOI MUON
-// ==========================================
-
-function borrowerTable(rows) {
-
-    return `
-
-        <div class="table-wrap">
-
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>NGƯỜI MƯỢN</th>
-                        <th>MÃ ID</th>
-                        <th>ĐƠN VỊ</th>
-                        <th>SỐ ĐIỆN THOẠI</th>
-                        <th>THAO TÁC</th>
-                    </tr>
-                </thead>
-
-
-                <tbody>
-
-                    ${rows.map(function (borrower) {
-
-                        // Lay chu cai dau cua hai tu cuoi trong ho ten
-                        let words = borrower.name.split(' ');
-                        let avatar = words.slice(-2).map(function (word) {
-                            return word[0];
-                        }).join('');
-
-                        return `
-                            <tr>
-
-                                <td>
-
-                                    <div class="device-cell">
-
-                                        <div class="avatar">
-                                            ${avatar}
-                                        </div>
-
-                                        <b>${borrower.name}</b>
-
-                                    </div>
-
-                                </td>
-
-                                <td>
-                                    NM-${String(borrower.id).padStart(3, '0')}
-                                </td>
-
-                                <td>${borrower.unit}</td>
-
-                                <td>${borrower.phone}</td>
-
-                                <td>
-
-                                    <button
-                                        class="action-btn"
-                                        onclick="editItem('borrower', ${borrower.id})"
-                                    >
-                                        Sửa
-                                    </button>
-
-                                    <button
-                                        class="action-btn"
-                                        onclick="deleteItem('borrower', ${borrower.id})"
-                                    >
-                                        Xóa
-                                    </button>
-
-                                </td>
-
-                            </tr>
-                        `;
-
-                    }).join('')}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    `;
-}
-
-// ==========================================
-// 10. TRANG QUAN LY PHIEU MUON
-// ==========================================
-
-function loansPage() {
-
-    return head(
-        'BORROWING / 04',
-        'Quản lý phiếu mượn',
-        'Tạo phiếu, ghi nhận thiết bị và thời gian mượn – trả.',
-        '<button class="btn btn-primary" onclick="openModal(\'loan\')">＋ Tạo phiếu mượn</button>'
-    )
-
-    + `
-
-        <div class="panel">
-
-            <div class="toolbar">
-
-                <div class="search">
-
-                    <input
-                        id="searchBox"
-                        placeholder="Tìm mã phiếu hoặc người mượn..."
-                        oninput="filterRows()"
-                    >
-
-                </div>
-
-
-                <select id="filterStatus" onchange="filterRows()">
-
-                    <option value="">Tất cả trạng thái</option>
-
-                    <option>Đang mượn</option>
-
-                    <option>Quá hạn</option>
-
-                    <option>Đã trả</option>
-
-                </select>
-
-            </div>
-
-
-            <div id="tableArea">
-                ${fullLoanTable(data.loans)}
-            </div>
-
-        </div>
-
-    `;
-}
-
-
-// ==========================================
-// 11. HIEN THI DAY DU DANH SACH PHIEU MUON
-// ==========================================
-
-function fullLoanTable(rows) {
-
-    return `
-
-        <div class="table-wrap">
-
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>MÃ PHIẾU</th>
-                        <th>NGƯỜI MƯỢN</th>
-                        <th>THIẾT BỊ</th>
-                        <th>SL</th>
-                        <th>NGÀY MƯỢN</th>
-                        <th>HẸN TRẢ</th>
-                        <th>TRẠNG THÁI</th>
-                        <th>THAO TÁC</th>
-                    </tr>
-                </thead>
-
-
-                <tbody>
-
-                    ${rows.map(function (loan) {
-
-                        return `
-                            <tr>
-
-                                <td>#${loan.id}</td>
-
-                                <td>${loan.borrower}</td>
-
-                                <td>${loan.device}</td>
-
-                                <td>${loan.qty}</td>
-
-                                <td>${loan.borrowDate}</td>
-
-                                <td>${loan.dueDate}</td>
-
-                                <td>
-
-                                    <span class="status ${statusClass(loan.status)}">
-                                        ${loan.status}
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    ${loan.status !== 'Đã trả'
-
-                                        ? `
-                                            <button
-                                                class="action-btn"
-                                                onclick="markReturned(${loan.id})"
-                                            >
-                                                Xác nhận trả
-                                            </button>
-                                        `
-
-                                        : '—'
-                                    }
-
-                                </td>
-
-                            </tr>
-                        `;
-
-                    }).join('')}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    `;
-}
-
-
-// ==========================================
-// 12. TRANG THEO DOI TRA THIET BI
-// ==========================================
-
-function returnsPage() {
-
-    // Lay cac phieu chua duoc tra
-    let active = data.loans.filter(function (loan) {
-        return loan.status !== 'Đã trả';
-    });
-
-
-    // Dem so phieu qua han
-    let overdue = active.filter(function (loan) {
-        return loan.status === 'Quá hạn';
-    }).length;
-
-
-    // Dem so phieu dang muon
-    let borrowing = active.filter(function (loan) {
-        return loan.status === 'Đang mượn';
-    }).length;
-
-
-    // Dem so phieu da tra
-    let returned = data.loans.filter(function (loan) {
-        return loan.status === 'Đã trả';
-    }).length;
-
-
-    return head(
-        'RETURN TRACKING / 05',
-        'Theo dõi trả thiết bị',
-        'Kiểm tra hạn trả, xác nhận hoàn trả và ghi nhận tình trạng.',
-        ''
-    )
-
-    + `
-
-        <div class="stats">
-
-            ${stat(
-                'Chờ hoàn trả',
-                active.length,
-                '↩',
-                'Phiếu chưa hoàn tất'
-            )}
-
-            ${stat(
-                'Quá hạn',
-                overdue,
-                '◷',
-                'Cần liên hệ người mượn',
-                'var(--red)'
-            )}
-
-            ${stat(
-                'Đã hoàn tất',
-                returned,
-                '✓',
-                'Đã xác nhận trả'
-            )}
-
-            ${stat(
-                'Đang mượn',
-                borrowing,
-                '⇄',
-                'Trong thời hạn',
-                'var(--blue)'
-            )}
-
-        </div>
-
-
-        <div class="panel">
-
-            <div class="panel-head">
-
-                <div>
-                    <h3>Danh sách cần theo dõi</h3>
-                    <p>Xác nhận trả sau khi kiểm tra thiết bị thực tế</p>
-                </div>
-
-            </div>
-
-            ${fullLoanTable(active)}
-
-        </div>
-
-    `;
-}
-
-// ==========================================
-// 13. HAM HIEN THI NOI DUNG TRANG
-// ==========================================
+// Moi trang (file HTML) tu khai bao ten bang <body data-page="...">
+// Ham render() chi do du lieu vao cac phan tu co san trong HTML.
 
 function render() {
 
-    // Ten hien thi tren thanh dieu huong
-    let names = {
-        dashboard: 'Dashboard',
-        devices: 'Thiết bị',
-        borrowers: 'Người mượn',
-        loans: 'Phiếu mượn',
-        returns: 'Theo dõi trả'
-    };
+    // ----- Trang chu -----
+    if (currentPage === 'trangchu') {
+
+        let total = 0;
+
+        data.devices.forEach(function (device) {
+            total += Number(device.qty);
+        });
+
+        let active = data.loans.filter(function (loan) {
+            return loan.status === 'Đang mượn';
+        }).length;
+
+        let overdue = data.loans.filter(function (loan) {
+            return loan.status === 'Quá hạn';
+        }).length;
+
+        let ready = data.devices.filter(function (device) {
+            return device.status === 'Sẵn sàng';
+        }).length;
+
+        setText('statTotal', total);
+        setText('statActive', active);
+        setText('statReady', ready);
+        setText('statOverdue', overdue);
+
+        fillRows(loanRows(data.loans.slice(0, 4)));
+    }
 
 
-    // Cap nhat ten trang hien tai
-    $('#crumb').textContent = names[currentPage];
+    // ----- Cac trang co tim kiem: thiet bi, nguoi muon, phieu muon -----
+    else if (currentPage === 'devices' ||
+             currentPage === 'customers' ||
+             currentPage === 'loans') {
+
+        filterRows();
+    }
 
 
-    // Chon ham tuong ung voi trang dang mo
-    let pages = {
-        dashboard: dashboard,
-        devices: devicesPage,
-        borrowers: borrowersPage,
-        loans: loansPage,
-        returns: returnsPage
-    };
+    // ----- Theo doi tra -----
+    else if (currentPage === 'returns') {
 
+        let pending = data.loans.filter(function (loan) {
+            return loan.status !== 'Đã trả';
+        });
 
-    // Hien thi noi dung trang len giao dien
-    $('#page').innerHTML = pages[currentPage]();
+        let overdue = pending.filter(function (loan) {
+            return loan.status === 'Quá hạn';
+        }).length;
+
+        let borrowing = pending.filter(function (loan) {
+            return loan.status === 'Đang mượn';
+        }).length;
+
+        let done = data.loans.filter(function (loan) {
+            return loan.status === 'Đã trả';
+        }).length;
+
+        setText('statPending', pending.length);
+        setText('statOverdue', overdue);
+        setText('statDone', done);
+        setText('statBorrowing', borrowing);
+
+        fillRows(fullLoanRows(pending));
+    }
 
 
     // Cap nhat trang thai active tren thanh menu
@@ -1099,54 +421,40 @@ function render() {
 
 
 // ==========================================
-// 14. HAM CHUYEN TRANG (MO FILE HTML KHAC)
-// ==========================================
-
-function go(page) {
-
-    // Dashboard la index.html, cac trang con la <ten>.html
-    window.location.href = (page === 'dashboard' ? 'index' : page) + '.html';
-
-}
-
-
-// ==========================================
-// 15. CHUC NANG TIM KIEM VA LOC DU LIEU
+// 6. CHUC NANG TIM KIEM VA LOC DU LIEU
 // ==========================================
 
 function filterRows() {
 
-    // Lay noi dung nguoi dung nhap vao o tim kiem
-    let search = $('#searchBox').value.toLowerCase();
+    // Lay noi dung o tim kiem va trang thai duoc chon (neu trang co)
+    let searchBox = document.getElementById('searchBox');
+    let statusBox = document.getElementById('filterStatus');
 
-    // Lay trang thai duoc chon
-    let status = $('#filterStatus')?.value || '';
+    let search = searchBox ? searchBox.value.toLowerCase() : '';
+    let status = statusBox ? statusBox.value : '';
 
 
-    // Tim kiem va loc thiet bi
+    // Thiet bi
     if (currentPage === 'devices') {
 
         let result = data.devices.filter(function (device) {
 
             let information = (device.name + device.type).toLowerCase();
 
-            let matchSearch = information.includes(search);
-
-            let matchStatus = status === '' || device.status === status;
-
-            return matchSearch && matchStatus;
+            return information.includes(search) &&
+                   (status === '' || device.status === status);
 
         });
 
-        $('#tableArea').innerHTML = deviceTable(result);
+        fillRows(deviceRows(result));
 
     }
 
 
-    // Tim kiem nguoi muon
-    else if (currentPage === 'borrowers') {
+    // Nguoi muon
+    else if (currentPage === 'customers') {
 
-        let result = data.borrowers.filter(function (borrower) {
+        let result = data.customer.filter(function (borrower) {
 
             let information = (
                 borrower.name +
@@ -1158,12 +466,12 @@ function filterRows() {
 
         });
 
-        $('#tableArea').innerHTML = borrowerTable(result);
+        fillRows(borrowerRows(result));
 
     }
 
 
-    // Tim kiem va loc phieu muon
+    // Phieu muon
     else if (currentPage === 'loans') {
 
         let result = data.loans.filter(function (loan) {
@@ -1174,15 +482,12 @@ function filterRows() {
                 loan.device
             ).toLowerCase();
 
-            let matchSearch = information.includes(search);
-
-            let matchStatus = status === '' || loan.status === status;
-
-            return matchSearch && matchStatus;
+            return information.includes(search) &&
+                   (status === '' || loan.status === status);
 
         });
 
-        $('#tableArea').innerHTML = fullLoanTable(result);
+        fillRows(fullLoanRows(result));
 
     }
 
@@ -1315,7 +620,7 @@ function openModal(type, item = null) {
             control = `
                 <select name="${key}">
 
-                    ${data.borrowers.map(function (borrower) {
+                    ${data.customer.map(function (borrower) {
 
                         return `
                             <option value="${borrower.name}"
@@ -1437,7 +742,7 @@ $('#modalForm').addEventListener('submit', function (event) {
         if (modalType === 'device') {
             arr = data.devices;
         } else if (modalType === 'borrower') {
-            arr = data.borrowers;
+            arr = data.customer;
         } else {
             arr = data.loans;
         }
@@ -1488,7 +793,7 @@ $('#modalForm').addEventListener('submit', function (event) {
         if (modalType === 'device') {
             arr = data.devices;
         } else {
-            arr = data.borrowers;
+            arr = data.customer;
         }
 
 
@@ -1505,7 +810,7 @@ $('#modalForm').addEventListener('submit', function (event) {
         if (modalType === 'device') {
             data.devices.unshift(obj);
         } else {
-            data.borrowers.unshift(obj);
+            data.customer.unshift(obj);
         }
 
     }
@@ -1542,7 +847,7 @@ function editItem(type, id) {
     if (type === 'device') {
         arr = data.devices;
     } else {
-        arr = data.borrowers;
+        arr = data.customer;
     }
 
 
@@ -1580,7 +885,7 @@ function deleteItem(type, id) {
     if (type === 'device') {
         key = 'devices';
     } else {
-        key = 'borrowers';
+        key = 'customer';
     }
 
 

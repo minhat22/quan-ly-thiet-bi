@@ -16,12 +16,12 @@
   <div class="brand"><div class="brand-mark">G</div><div><strong>GearFlow</strong><small>EQUIPMENT MANAGER</small></div></div>
   <div class="nav-label">TỔNG QUAN</div>
   <nav class="nav">
-    <a href="main.html" data-page="dashboard"><span class="ico">▦</span><span class="nav-text">Dashboard</span></a>
+    <a href="main.html" data-page="trangchu"><span class="ico">▦</span><span class="nav-text">Trang chủ</span></a>
   </nav>
   <div class="nav-label">QUẢN LÝ</div>
   <nav class="nav">
     <a href="devices.html" data-page="devices"><span class="ico">▣</span><span class="nav-text">Thiết bị</span></a>
-    <a href="customers.html" data-page="borrowers"><span class="ico">♙</span><span class="nav-text">Người mượn</span></a>
+    <a href="customers.html" data-page="customers"><span class="ico">♙</span><span class="nav-text">Người mượn</span></a>
     <a href="history.html" data-page="loans"><span class="ico">⇄</span><span class="nav-text">Phiếu mượn</span></a>
     <a class="active" href="observe.html" data-page="returns"><span class="ico">↩</span><span class="nav-text">Theo dõi trả</span></a>
   </nav>
@@ -29,7 +29,78 @@
 </aside>
 <main class="main">
   <div class="topbar"><div class="crumb">Workspace <span style="color:#53677d">/</span> <b id="crumb">Theo dõi trả</b></div><div class="top-right"><div class="date-chip" id="today"></div><div class="user-chip"><div class="avatar">AD</div><span>Quản trị viên</span>⌄</div></div></div>
-  <section id="page"></section>
+  <section id="page">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">RETURN TRACKING / 05</div>
+        <h1>Theo dõi trả thiết bị</h1>
+        <p>Kiểm tra hạn trả, xác nhận hoàn trả và ghi nhận tình trạng.</p>
+      </div>
+      
+    </div>
+
+    <div class="stats">
+      <div class="stat" style="--glow:var(--green)">
+        <div class="stat-top">
+          <span>Chờ hoàn trả</span>
+          <span class="stat-icon">↩</span>
+        </div>
+        <strong id="statPending">0</strong>
+        <small>Phiếu chưa hoàn tất</small>
+      </div>
+      <div class="stat" style="--glow:var(--red)">
+        <div class="stat-top">
+          <span>Quá hạn</span>
+          <span class="stat-icon">◷</span>
+        </div>
+        <strong id="statOverdue">0</strong>
+        <small>Cần liên hệ người mượn</small>
+      </div>
+      <div class="stat" style="--glow:var(--green)">
+        <div class="stat-top">
+          <span>Đã hoàn tất</span>
+          <span class="stat-icon">✓</span>
+        </div>
+        <strong id="statDone">0</strong>
+        <small>Đã xác nhận trả</small>
+      </div>
+      <div class="stat" style="--glow:var(--blue)">
+        <div class="stat-top">
+          <span>Đang mượn</span>
+          <span class="stat-icon">⇄</span>
+        </div>
+        <strong id="statBorrowing">0</strong>
+        <small>Trong thời hạn</small>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h3>Danh sách cần theo dõi</h3>
+          <p>Xác nhận trả sau khi kiểm tra thiết bị thực tế</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+            <th>MÃ PHIẾU</th>
+            <th>NGƯỜI MƯỢN</th>
+            <th>THIẾT BỊ</th>
+            <th>SL</th>
+            <th>NGÀY MƯỢN</th>
+            <th>HẸN TRẢ</th>
+            <th>TRẠNG THÁI</th>
+            <th>THAO TÁC</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 </main>
 </div>
 <div class="modal-backdrop" id="modalBackdrop"><div class="modal"><div class="modal-head"><h3 id="modalTitle">Thêm mới</h3><button class="close" onclick="closeModal()">×</button></div><form id="modalForm"><div id="modalFields" class="form-grid"></div><div class="modal-actions"><button type="button" class="btn btn-ghost" onclick="closeModal()">Hủy</button><button class="btn btn-primary" type="submit">Lưu thông tin</button></div></form></div></div>
