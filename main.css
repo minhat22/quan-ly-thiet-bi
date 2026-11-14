@@ -72,7 +72,7 @@ button{
     display:grid;
     gap:5px
 }
-.nav button{
+.nav a{
     border:0;
     background:transparent;
     color:#9eafc2;
@@ -84,11 +84,11 @@ button{
     gap:12px;
     transition:.2s
 }
-.nav button:hover{
+.nav a:hover{
     background:#172536;
     color:#fff
 }
-.nav button.active{
+.nav a.active{
     background:linear-gradient(100deg,#1b493e,#17352f);
     color:var(--green);
     box-shadow:inset 3px 0 var(--green)
@@ -666,10 +666,10 @@ tbody tr:last-child td{
     .brand{
         padding:0 7px 25px
     }
-    .brand strong,.brand small,.nav-label,.nav button .nav-text,.sidebar-bottom{
+    .brand strong,.brand small,.nav-label,.nav a .nav-text,.sidebar-bottom{
         display:none
     }
-    .nav button{
+    .nav a{
         justify-content:center;
         padding:13px 8px
     }
@@ -742,14 +742,14 @@ body{
 .nav-label{
     color:#829fbe
 }
-.nav button{
+.nav a{
     color:#c1d2e5
 }
-.nav button:hover{
+.nav a:hover{
     background:#1c416b;
     color:#fff
 }
-.nav button.active{
+.nav a.active{
     background:linear-gradient(100deg,#205a9e,#19477d);
     color:#d7eaff;
     box-shadow:inset 3px 0 #67aaff
@@ -925,4 +925,12 @@ td{
     background:#e8f2ff;
     border-color:#b6d3f7;
     color:#245d9d
+}
+
+
+/* Thanh điều hướng dùng thẻ <a> thay cho <button> */
+.nav a{
+    text-decoration:none;
+    font:inherit;
+    cursor:pointer
 }

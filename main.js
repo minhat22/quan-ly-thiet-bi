@@ -123,7 +123,7 @@ if (savedData !== null) {
 }
 
 // Trang hien tai dang duoc chon
-let currentPage = 'dashboard';
+let currentPage = document.body.dataset.page;
 
 // Luu thong tin phan tu dang chinh sua
 let editing = null;
@@ -1089,13 +1089,9 @@ function render() {
 
 
     // Cap nhat trang thai active tren thanh menu
-    document.querySelectorAll('.nav button').forEach(function (button) {
+    document.querySelectorAll('.nav a').forEach(function (link) {
 
-        if (button.dataset.page === currentPage) {
-            button.classList.add('active');
-        } else {
-            button.classList.remove('active');
-        }
+        link.classList.toggle('active', link.dataset.page === currentPage);
 
     });
 
@@ -1103,33 +1099,15 @@ function render() {
 
 
 // ==========================================
-// 14. HAM CHUYEN DOI GIUA CAC TRANG
+// 14. HAM CHUYEN TRANG (MO FILE HTML KHAC)
 // ==========================================
 
 function go(page) {
 
-    // Cap nhat trang duoc chon
-    currentPage = page;
-
-    // Hien thi lai giao dien
-    render();
+    // Dashboard la index.html, cac trang con la <ten>.html
+    window.location.href = (page === 'dashboard' ? 'index' : page) + '.html';
 
 }
-
-
-// Gan su kien click cho cac nut tren thanh menu
-document.querySelectorAll('.nav button').forEach(function (button) {
-
-    button.addEventListener('click', function () {
-
-        // Lay ten trang tu thuoc tinh data-page
-        let page = button.dataset.page;
-
-        go(page);
-
-    });
-
-});
 
 
 // ==========================================
