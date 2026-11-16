@@ -437,9 +437,9 @@ table{
 th{
     text-align:left;
     color:#75899f;
-    font-size:9px;
+    font-size:11px;
     font-weight:700;
-    letter-spacing:8px;
+    letter-spacing:1px;
     padding:10px 9px;
     border-bottom:1px solid var(--line)
 }
@@ -865,7 +865,7 @@ body{
     color:#91a1b4
 }
 th{
-    color:#8295ad;border-bottom-color:#e3ebf5
+    color:#5f7694;border-bottom-color:#e3ebf5
 }
 td{
     color:#385573;border-bottom-color:#edf2f8
