@@ -13,22 +13,67 @@
 <body data-page="returns">
 <div class="app">
 <aside class="sidebar">
-  <div class="brand"><div class="brand-mark">G</div><div><strong>GearFlow</strong><small>EQUIPMENT MANAGER</small></div></div>
+  <div class="brand">
+    <div>
+      <img class="logo-img" src="../images/logo.png" alt="">
+    </div>
+    <div>
+      <span class="title-name">GearFlow</span>
+      <small>EQUIPMENT MANAGER</small>
+    </div>
+  </div>
   <div class="nav-label">TỔNG QUAN</div>
   <nav class="nav">
-    <a class="active" href="main.html" data-page="trangchu"><div><img class="ico" src="../images/menu-TongQuang.png" alt=""><span class="nav-text">Trang chủ</span></div></a>
+    <a href="main.html" data-page="trangchu">
+      <div>
+        <img class="ico" src="../images/menu-TongQuang.png" alt="">
+        <span class="nav-text">Trang chủ</span>
+      </div>
+    </a>
   </nav>
   <div class="nav-label">QUẢN LÝ</div>
   <nav class="nav">
-    <a href="devices.html" data-page="devices"><div><img class="ico" src="../images/menu-TB.png" alt=""><span class="nav-text">Thiết bị</span></div></a>
-    <a href="customers.html" data-page="customers"><div><img class="ico" src="../images/menu-Customers.png" alt=""><span class="nav-text">Người mượn</span></div></a>
-    <a href="history.html" data-page="loans"><div><img class="ico" src="../images/menu-PhieuMuon.png" alt=""><span class="nav-text">Phiếu mượn</span></div></a>
-    <a href="observe.html" data-page="returns"><div><img class="ico" src="../images/menu-history.png" alt=""><span class="nav-text">Theo dõi trả</span></div></a>
+    <a href="devices.html" data-page="devices">
+      <div>
+        <img class="ico" src="../images/menu-TB.png" alt="">
+        <span class="nav-text">Thiết bị</span>
+      </div>
+    </a>
+    <a href="customers.html" data-page="customers">
+      <div>
+        <img class="ico" src="../images/menu-Customers.png" alt="">
+        <span class="nav-text">Người mượn</span>
+      </div>
+    </a>
+    <a href="history.html" data-page="loans">
+      <div>
+        <img class="ico" src="../images/menu-PhieuMuon.png" alt="">
+        <span class="nav-text">Phiếu mượn</span>
+      </div>
+    </a>
+    <a href="observe.html" data-page="returns">
+      <div>
+        <img class="ico" src="../images/menu-history.png" alt="">
+        <span class="nav-text">Theo dõi trả</span>
+      </div>
+    </a>
   </nav>
-  <div class="sidebar-bottom"><div class="online"><span class="dot"></span> Hệ thống hoạt động</div><p>GearFlow · Bản demo giao diện<br>Quản lý thiết bị tập trung</p></div>
+  
 </aside>
 <main class="main">
-  <div class="topbar"><div class="crumb">Workspace <span style="color:#53677d">/</span> <b id="crumb">Theo dõi trả</b></div><div class="top-right"><div class="date-chip" id="today"></div><div class="user-chip"><div class="avatar">AD</div><span>Quản trị viên</span>⌄</div></div></div>
+  <div class="topbar"><div class="crumb">Workspace 
+    <span class="sep">/</span> 
+    <b id="crumb">Theo dõi trả</b>
+  </div>
+  <div class="top-right">
+    <div class="date-chip" id="today"></div>
+    <div class="user-chip">
+      <div class="avatar">AD</div>
+      <span>Quản trị viên</span>
+      <img class="img-down-arrow" src="../images/down-arrow.png" alt="">
+    </div>
+  </div>
+</div>
   <section id="page">
     <div class="page-head">
       <div>
@@ -40,34 +85,34 @@
     </div>
 
     <div class="stats">
-      <div class="stat" style="--glow:var(--green)">
+      <div class="stat stat-green">
         <div class="stat-top">
           <span>Chờ hoàn trả</span>
-          <span class="stat-icon">↩</span>
+          <img class="stat-icon" src="../images/waiting.png" alt="">
         </div>
         <strong id="statPending">0</strong>
         <small>Phiếu chưa hoàn tất</small>
       </div>
-      <div class="stat" style="--glow:var(--red)">
+      <div class="stat stat-red">
         <div class="stat-top">
           <span>Quá hạn</span>
-          <span class="stat-icon">◷</span>
+          <img class="stat-icon" src="../images/main-PhieuQuaHan.png" alt="">
         </div>
         <strong id="statOverdue">0</strong>
         <small>Cần liên hệ người mượn</small>
       </div>
-      <div class="stat" style="--glow:var(--green)">
+      <div class="stat stat-green">
         <div class="stat-top">
           <span>Đã hoàn tất</span>
-          <span class="stat-icon">✓</span>
+          <img class="stat-icon" src="../images/success.png" alt="">
         </div>
         <strong id="statDone">0</strong>
         <small>Đã xác nhận trả</small>
       </div>
-      <div class="stat" style="--glow:var(--blue)">
+      <div class="stat stat-blue">
         <div class="stat-top">
           <span>Đang mượn</span>
-          <span class="stat-icon">⇄</span>
+          <img class="stat-icon" src="../images/main-PhieuDgMuon.png" alt="">
         </div>
         <strong id="statBorrowing">0</strong>
         <small>Trong thời hạn</small>
@@ -103,7 +148,21 @@
   </section>
 </main>
 </div>
-<div class="modal-backdrop" id="modalBackdrop"><div class="modal"><div class="modal-head"><h3 id="modalTitle">Thêm mới</h3><button class="close" onclick="closeModal()">×</button></div><form id="modalForm"><div id="modalFields" class="form-grid"></div><div class="modal-actions"><button type="button" class="btn btn-ghost" onclick="closeModal()">Hủy</button><button class="btn btn-primary" type="submit">Lưu thông tin</button></div></form></div></div>
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Thêm mới</h3>
+      <button class="close" onclick="closeModal()"><span class="close-button">x</span></button>
+    </div>
+    <form id="modalForm">
+      <div id="modalFields" class="form-grid"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Hủy</button>
+        <button class="btn btn-primary" type="submit">Lưu thông tin</button>
+      </div>
+    </form>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script src="../js/core.js"></script>

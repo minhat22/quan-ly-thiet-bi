@@ -511,9 +511,9 @@ function openModal(type, item = null) {
     editing = item;
 
     let labels = {
-        device: 'Thiết bị',
-        borrower: 'Người mượn',
-        loan: 'Phiếu mượn'
+        device: 'thiết bị',
+        borrower: 'người mượn',
+        loan: 'phiếu mượn'
     };
 
     if (item !== null) {

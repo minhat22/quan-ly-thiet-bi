@@ -19,6 +19,42 @@ button,input,select{
 button{
     cursor:pointer
 }
+.close-button:hover{
+color: rgb(155, 101, 101);
+}
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    border: 2px solid #dce7f4;
+    background: #f2f7fd;
+    color: #527293;
+    border-radius: 8px;
+    padding: 6px 9px;
+    font-size: 10px;
+    margin-right: 4px;
+    transition: color 0.3s ease, border-color 0.3s ease;
+}
+.btn-primary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background: #2d5a9a;
+    z-index: -1;
+    transition: width 0.15s ease;
+    
+}
+.btn-primary:hover::before {
+    width: 100%;
+}
+.title-name {
+    color: white;
+    font-size: bold ;
+    font-weight: 800;
+}
 .app{
     display:flex;
     min-height:100vh
@@ -36,25 +72,19 @@ button{
     display:flex;
     align-items:center;
     gap:11px;
-    padding:0 10px 30px
+    padding:0 10px 30px 0px;
 }
-.brand-mark{
-    width:38px;
-    height:38px;
-    border-radius:12px;
-    background:linear-gradient(135deg,var(--green),#158b80);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:#07140f;
-    font-weight:900;
-    font-size:19px;
-    box-shadow:0 8px 24px #25d69a33
+.logo-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;      
+    object-position: center;
+    border-radius: 12px;
+    left: 0px;
+    right: 0px;
 }
-.brand strong{
-    font-size:17px;
-    letter-spacing:.2px
-}
+
+
 .brand small{
     display:block;
     color:var(--muted);
@@ -101,13 +131,7 @@ button{
     text-align:center;
     margin-right: 10px;
 }
-.sidebar-bottom{
-    margin-top:auto;
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:14px;
-    background:#121e2b
-}
+
 .online{
     display:flex;
     align-items:center;
@@ -122,11 +146,7 @@ button{
     border-radius:50%;
     box-shadow:0 0 10px var(--green)
 }
-.sidebar-bottom p{
-    font-size:11px;
-    color:var(--muted);
-    line-height:1.6;margin:10px 0 0
-}
+
 .main{
     margin-left:248px;
     width:calc(100% - 248px);
@@ -190,6 +210,12 @@ button{
     font-weight:700;
     text-transform:uppercase
 }
+.parent:nth-child(1):hover{
+    color: rgb(57, 152, 241);
+    cursor: pointer;
+
+}
+
 .page-head h1{
     font-size:27px;
     margin:7px 0 5px;
@@ -222,6 +248,9 @@ button{
     background:#1a2939;
     color:#d7e4f1;
     border:1px solid var(--line)
+}
+.btn-ghost:hover {
+    color:rgb(154, 65, 65);
 }
 .btn-danger{
     background:#48232c;
@@ -606,6 +635,7 @@ tbody tr:last-child td{
 .form-group.full{
     flex-basis:100%
 }
+
 .modal-backdrop{
     position:fixed;
     inset:0;background:#03070dcc;
@@ -679,6 +709,7 @@ tbody tr:last-child td{
 .mobile-menu{
     display:none
 }
+
 @media(max-width:1050px){
     .stats{
         flex-wrap:wrap
@@ -701,9 +732,9 @@ tbody tr:last-child td{
         padding:20px 9px
     }
     .brand{
-        padding:0 7px 25px
+        padding:0 7px 25px 0px;
     }
-    .brand strong,.brand small,.nav-label,.nav a .nav-text,.sidebar-bottom{
+    .brand strong,.brand small,.nav-label,.nav a .nav-text,.title-name{
         display:none
     }
     .nav a{
@@ -791,16 +822,11 @@ body{
     color:#d7eaff;
     box-shadow:inset 3px 0 #67aaff
 }
-.sidebar-bottom{
-    background:#173b63;
-    border-color:#31577f
-}
+
 .online{
     color:#d1e2f4
 }
-.sidebar-bottom p{
-    color:#adc4df
-}
+
 .crumb{
     color:#8295ad
 }
@@ -819,6 +845,7 @@ body{
 .eyebrow{
     color:#2677e8
 }
+
 .stat{
     background:linear-gradient(145deg,#fff,#f7faff);
     border-color:var(--line)
@@ -915,13 +942,36 @@ td{
     color:#8aa0b9
 }
 .action-btn{
-    border-color:#dce7f4;
-    background:#f2f7fd;
-    color:#527293
+   position: relative;
+    overflow: hidden;
+    z-index: 1;
+    border: 2px solid #dce7f4;
+    background: #f2f7fd;
+    color: #527293;
+    border-radius: 8px;
+    padding: 6px 9px;
+    font-size: 10px;
+    margin-right: 4px;
+    transition: color 0.3s ease, border-color 0.3s ease;
 }
-.action-btn:hover{
-    border-color:#70a9ee;
-    color:#236dca
+
+.action-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background: #2677e8;
+    z-index: -1;
+    transition: width 0.15s ease;
+}
+.action-btn:hover {
+    border-color:#165ff1;
+    color: white;
+}
+.action-btn:hover::before {
+    width: 100%;
 }
 .modal-backdrop{
     background:#102d5099
@@ -963,7 +1013,10 @@ td{
     border-color:#b6d3f7;
     color:#245d9d
 }
-
+.img-down-arrow {
+    height: 20px;
+    width: 20px;
+}
 
 /* Thanh điều hướng dùng thẻ <a> thay cho <button> */
 .nav a{
@@ -971,3 +1024,23 @@ td{
     font:inherit;
     cursor:pointer
 }
+
+/* ===== Chuyển từ style inline trong HTML ===== */
+.crumb .sep{color:#53677d}
+.text-green{color:var(--green)}
+.panel.panel-gap{margin-top:18px}
+.stat.stat-green{--glow:var(--green)}
+.stat.stat-blue{--glow:var(--blue)}
+.stat.stat-red{--glow:var(--red)}
+.bar.h-16{height:16%}
+.bar.h-23{height:23%}
+.bar.h-34{height:34%}
+.bar.h-38{height:38%}
+.bar.h-39{height:39%}
+.bar.h-45{height:45%}
+.bar.h-50{height:50%}
+.bar.h-56{height:56%}
+.bar.h-61{height:61%}
+.bar.h-66{height:66%}
+.bar.h-72{height:72%}
+.bar.h-88{height:88%}
