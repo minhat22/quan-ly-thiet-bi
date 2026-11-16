@@ -60,7 +60,7 @@ function renderPage() {
             }
 
             return '<div class="activity-item">' +
-                '<img class="activity-icon" src="../image/' + icon + '" alt="">' +
+                '<img class="activity-icon" src="../images/' + icon + '" alt="">' +
                 '<div>' +
                 '<strong>' + title + '</strong>' +
                 '<p>' + act.borrower + ' · ' + act.qty + ' ' + act.device + '</p>' +
