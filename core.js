@@ -115,16 +115,59 @@ if (data.borrowers && !data.customer) {
     delete data.borrowers;
 }
 
+// Du lieu thiet bi cu: doi 'status' thanh so luong dang bao tri
+data.devices.forEach(function (device) {
+    if (device.maintenance === undefined) {
+        device.maintenance = device.status === 'Bảo trì' ? Number(device.qty) : 0;
+    }
+    delete device.status;
+});
+
+// Phieu muon cu (1 thiet bi): doi sang danh sach thiet bi 'items'
+data.loans.forEach(function (loan) {
+    if (!loan.items) {
+        // Trung ten thi lay thiet bi co ma nho nhat
+        let found = data.devices.filter(function (d) {
+            return d.name === loan.device;
+        }).sort(function (a, b) {
+            return a.id - b.id;
+        })[0];
+
+        loan.items = [{
+            deviceId: found ? found.id : null,
+            name: loan.device,
+            qty: Number(loan.qty)
+        }];
+
+        delete loan.device;
+        delete loan.qty;
+    }
+});
+
+// Tao lich su kho neu chua co
+if (!data.stockLog) {
+    data.stockLog = [];
+}
+
 // Tao nhat ky hoat dong neu chua co
 if (!data.activities) {
     data.activities = [];
     data.loans.forEach(function (loan) {
         if (loan.status === 'Đã trả') {
-            data.activities.push({ type: 'return', borrower: loan.borrower, device: loan.device, qty: loan.qty, time: loan.returnDate });
+            data.activities.push({ type: 'return', borrower: loan.borrower, summary: loanSummary(loan), time: loan.returnDate });
         }
-        data.activities.push({ type: 'create', borrower: loan.borrower, device: loan.device, qty: loan.qty, time: loan.borrowDate });
+        data.activities.push({ type: 'create', borrower: loan.borrower, summary: loanSummary(loan), time: loan.borrowDate });
     });
 }
+
+// Nhat ky cu (1 thiet bi): doi sang dang tom tat 'summary'
+data.activities.forEach(function (act) {
+    if (act.summary === undefined) {
+        act.summary = act.qty + ' ' + act.device;
+        delete act.device;
+        delete act.qty;
+    }
+});
 
 // Trang dang mo (lay tu data-page cua <body>)
 let currentPage = document.body.dataset.page;
@@ -196,13 +239,170 @@ function fillRows(html) {
     }
 }
 
+// So thiet bi dang duoc muon (cac phieu chua tra, tinh theo ma thiet bi)
+function borrowedCount(deviceId) {
+    let sum = 0;
+
+    data.loans.forEach(function (loan) {
+        if (loan.status === 'Đã trả') {
+            return;
+        }
+
+        loan.items.forEach(function (item) {
+            if (item.deviceId === deviceId) {
+                sum += Number(item.qty);
+            }
+        });
+    });
+
+    return sum;
+}
+
+// So thiet bi san sang = tong - dang muon - dang bao tri
+function readyCount(device) {
+    let ready = Number(device.qty) - borrowedCount(device.id) - Number(device.maintenance || 0);
+
+    return Math.max(0, ready);
+}
+
+// Ten thiet bi cua mot dong trong phieu (mat thiet bi thi dung ten da luu)
+function itemName(item) {
+    let device = data.devices.find(function (d) {
+        return d.id === item.deviceId;
+    });
+
+    return device ? device.name : item.name;
+}
+
+// Dang chu: "Laptop Dell × 2, May chieu × 1"
+function loanItemsText(loan) {
+    return loan.items.map(function (item) {
+        return itemName(item) + ' × ' + item.qty;
+    }).join(', ');
+}
+
+// Dang chu cho nhat ky: "2 Laptop Dell, 1 May chieu"
+function loanSummary(loan) {
+    return loan.items.map(function (item) {
+        return item.qty + ' ' + itemName(item);
+    }).join(', ');
+}
+
+// Chuyen ky tu dac biet thanh dang an toan khi chen vao HTML
+function escapeHtml(text) {
+    return String(text).replace(/[&<>"]/g, function (ch) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch];
+    });
+}
+
+// Mo form dieu chinh kho cho mot thiet bi
+function openStockModal(id) {
+    let device = data.devices.find(function (d) {
+        return d.id === id;
+    });
+
+    if (device === undefined) {
+        return;
+    }
+
+    modalType = 'stock';
+    editing = device;
+
+    $('#modalTitle').textContent = 'Điều chỉnh kho: ' + device.name;
+
+    $('#modalFields').innerHTML = `
+        <div class="form-group full">
+            <label>Kho hiện tại</label>
+            <div style="font-size:13px;line-height:1.7">
+                Tổng <b>${device.qty}</b> ·
+                Đang mượn <b>${borrowedCount(device.id)}</b> ·
+                Bảo trì <b>${Number(device.maintenance || 0)}</b> ·
+                Sẵn sàng <b>${readyCount(device)}</b>
+            </div>
+        </div>
+        <div class="form-group full">
+            <label>Thao tác</label>
+            <select name="action">
+                <option value="add">Nhập thêm (mua thêm thiết bị)</option>
+                <option value="broken">Báo hỏng (chuyển sang bảo trì)</option>
+                <option value="fixed">Sửa xong (đưa về sẵn sàng)</option>
+                <option value="dispose">Thanh lý (loại khỏi kho)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Số lượng</label>
+            <input name="amount" type="number" min="1" value="1" required>
+        </div>
+        <div class="form-group">
+            <label>Ghi chú</label>
+            <input name="note" type="text" placeholder="Không bắt buộc">
+        </div>
+    `;
+
+    $('#modalBackdrop').classList.add('show');
+}
+
+// Dieu chinh kho: nhap them / bao hong / sua xong / thanh ly
+function applyStock(device, obj) {
+    let amount = Math.floor(Number(obj.amount));
+    let broken = Number(device.maintenance || 0);
+    let ready = readyCount(device);
+
+    if (!(amount >= 1)) {
+        toast('Số lượng phải từ 1 trở lên');
+        return;
+    }
+
+    if (obj.action === 'add') {
+        device.qty = Number(device.qty) + amount;
+    }
+    else if (obj.action === 'broken') {
+        if (amount > ready) {
+            toast('Chỉ còn ' + ready + ' cái sẵn sàng để báo hỏng');
+            return;
+        }
+        device.maintenance = broken + amount;
+    }
+    else if (obj.action === 'fixed') {
+        if (amount > broken) {
+            toast('Chỉ có ' + broken + ' cái đang bảo trì');
+            return;
+        }
+        device.maintenance = broken - amount;
+    }
+    else if (obj.action === 'dispose') {
+        if (amount > broken + ready) {
+            toast('Chỉ thanh lý được tối đa ' + (broken + ready) + ' cái (bảo trì + sẵn sàng)');
+            return;
+        }
+        // Thanh ly: lay tu so dang bao tri truoc, thieu thi lay tu so san sang
+        device.maintenance = broken - Math.min(amount, broken);
+        device.qty = Number(device.qty) - amount;
+    }
+
+    // Ghi vao lich su kho (giu 50 muc moi nhat)
+    data.stockLog.unshift({
+        deviceId: device.id,
+        deviceName: device.name,
+        action: obj.action,
+        amount: amount,
+        note: (obj.note || '').trim(),
+        time: new Date().toISOString()
+    });
+    data.stockLog = data.stockLog.slice(0, 50);
+
+    save();
+    closeModal();
+    render();
+    toast('Đã cập nhật kho');
+}
+
 // Ghi them mot hoat dong vao dau nhat ky (toi da 30)
 function addActivity(type, loan) {
     data.activities.unshift({
         type: type,
         borrower: loan.borrower,
-        device: loan.device,
-        qty: loan.qty,
+        summary: loanSummary(loan),
         time: new Date().toISOString()
     });
     data.activities = data.activities.slice(0, 30);   // chi giu 30 muc moi nhat
@@ -234,8 +434,8 @@ function fullLoanRows(rows) {
             <tr>
                 <td>#${loan.id}</td>
                 <td>${loan.borrower}</td>
-                <td>${loan.device}</td>
-                <td>${loan.qty}</td>
+                <td>${loan.items.map(function (item) { return itemName(item) + ' × ' + item.qty; }).join('<br>')}</td>
+                <td>${loan.items.reduce(function (sum, item) { return sum + Number(item.qty); }, 0)}</td>
                 <td>${loan.borrowDate}</td>
                 <td>${loan.dueDate}</td>
                 <td>
@@ -283,11 +483,6 @@ const formFields = {
         ['name', 'Tên thiết bị', 'text'],
         ['type', 'Loại thiết bị', 'text'],
         ['qty', 'Số lượng', 'number'],
-        ['status', 'Tình trạng', 'select', [
-            'Sẵn sàng',
-            'Đang cho mượn',
-            'Bảo trì'
-        ]],
         ['icon', 'Biểu tượng (emoji)', 'text']
     ],
 
@@ -302,9 +497,8 @@ const formFields = {
     loan: [
         ['borrower', 'Người mượn', 'borrowerInput'],
         ['phone', 'Số điện thoại', 'tel'],
-        ['unit', 'Đơn vị', 'select', unitList],  
-        ['device', 'Thiết bị', 'selectDevice'],
-        ['qty', 'Số lượng mượn', 'number'],
+        ['unit', 'Đơn vị', 'select', unitList],
+        ['items', 'Thiết bị mượn', 'loanItems'],
         ['borrowDate', 'Ngày mượn', 'date'],
         ['dueDate', 'Ngày hẹn trả', 'date']
     ]
@@ -406,6 +600,14 @@ function openModal(type, item = null) {
             `;
         }
 
+        // Khoi chon nhieu thiet bi cho phieu muon
+        else if (kind === 'loanItems') {
+            control = `
+                <div id="loanItems">${loanItemRowHtml()}</div>
+                <button type="button" class="action-btn" onclick="addLoanItemRow()">＋ Thêm thiết bị</button>
+            `;
+        }
+
         // Danh sach chon thiet bi
         else if (kind === 'selectDevice') {
             control = `
@@ -441,7 +643,7 @@ function openModal(type, item = null) {
 
         html += `
 
-            <div class="form-group ${key === 'unit' ? 'full' : ''}">
+            <div class="form-group ${(key === 'unit' || kind === 'loanItems') ? 'full' : ''}">
 
                 <label>${label}</label>
 
@@ -455,6 +657,38 @@ function openModal(type, item = null) {
     $('#modalFields').innerHTML = html;
 
     $('#modalBackdrop').classList.add('show');
+}
+
+// Mot dong chon thiet bi trong form phieu muon (thiet bi + so luong)
+function loanItemRowHtml() {
+    let options = data.devices.map(function (device) {
+        let ready = readyCount(device);
+
+        return `<option value="${device.id}" ${ready === 0 ? 'disabled' : ''}>${device.name} (còn ${ready})</option>`;
+    }).join('');
+
+    return `
+        <div class="loan-item" style="display:flex;gap:8px;margin-bottom:8px">
+            <select name="itemDevice" style="flex:1;min-width:0">${options}</select>
+            <input name="itemQty" type="number" min="1" value="1" style="width:84px;flex:none" required>
+            <button type="button" class="action-btn" onclick="removeLoanItemRow(this)">Xóa</button>
+        </div>
+    `;
+}
+
+// Them mot dong thiet bi vao phieu muon
+function addLoanItemRow() {
+    $('#loanItems').insertAdjacentHTML('beforeend', loanItemRowHtml());
+}
+
+// Xoa mot dong thiet bi (phieu phai con it nhat 1 dong)
+function removeLoanItemRow(button) {
+    if (document.querySelectorAll('#loanItems .loan-item').length <= 1) {
+        toast('Phiếu mượn cần ít nhất 1 thiết bị');
+        return;
+    }
+
+    button.closest('.loan-item').remove();
 }
 
 // Dong form
@@ -471,11 +705,11 @@ function fillPhone(name) {
     let phoneBox = document.querySelector('#modalFields input[name="phone"]');
     let unitBox = document.querySelector('#modalFields select[name="unit"]');
 
-
     if (found && phoneBox) {
         phoneBox.value = found.phone;
     }
-     if (found && unitBox) {
+
+    if (found && unitBox) {
         unitBox.value = found.unit;
     }
 }
@@ -489,8 +723,14 @@ $('#modalForm').addEventListener('submit', function (event) {
 
     let obj = Object.fromEntries(formData.entries());
 
+    // Dieu chinh kho: xu ly rieng roi dung
+    if (modalType === 'stock') {
+        applyStock(editing, obj);
+        return;
+    }
+
     // Doi so luong tu chu sang so
-    if (modalType === 'device' || modalType === 'loan') {
+    if (modalType === 'device') {
         obj.qty = Number(obj.qty);
     }
 
@@ -515,6 +755,66 @@ $('#modalForm').addEventListener('submit', function (event) {
 
     // Tao phieu muon moi
     else if (modalType === 'loan') {
+        // Gom cac dong thiet bi (chon trung thiet bi thi cong don so luong)
+        let deviceIds = formData.getAll('itemDevice');
+        let quantities = formData.getAll('itemQty');
+        let items = [];
+
+        if (deviceIds.length === 0) {
+            toast('Vui lòng chọn ít nhất 1 thiết bị còn sẵn sàng');
+            return;
+        }
+
+        deviceIds.forEach(function (idText, index) {
+            let id = Number(idText);
+            let qty = Math.floor(Number(quantities[index]));
+
+            let existing = items.find(function (item) {
+                return item.deviceId === id;
+            });
+
+            if (existing !== undefined) {
+                existing.qty += qty;
+            } else {
+                items.push({ deviceId: id, qty: qty });
+            }
+        });
+
+        if (items.some(function (item) { return !(item.qty >= 1); })) {
+            toast('Mỗi thiết bị phải có số lượng từ 1 trở lên');
+            return;
+        }
+
+        // Kiem tra tung thiet bi co du so luong san sang khong
+        for (let item of items) {
+            let device = data.devices.find(function (d) {
+                return d.id === item.deviceId;
+            });
+
+            if (device === undefined) {
+                toast('Vui lòng chọn thiết bị cho phiếu mượn');
+                return;
+            }
+
+            let ready = readyCount(device);
+
+            if (item.qty > ready) {
+                toast('Chỉ còn ' + ready + ' cái "' + device.name + '" sẵn sàng');
+                return;
+            }
+
+            item.name = device.name;
+        }
+
+        if (obj.dueDate < obj.borrowDate) {
+            toast('Ngày hẹn trả phải sau hoặc bằng ngày mượn');
+            return;
+        }
+
+        delete obj.itemDevice;
+        delete obj.itemQty;
+        obj.items = items;
+
         // Tao ID moi cho phieu
         obj.id = Math.max(
             1000,
@@ -567,6 +867,7 @@ $('#modalForm').addEventListener('submit', function (event) {
         ) + 1;
 
         if (modalType === 'device') {
+            obj.maintenance = 0;
             data.devices.unshift(obj);
         } else {
             data.customer.unshift(obj);
@@ -604,6 +905,12 @@ function editItem(type, id) {
 
 // Xoa thiet bi / nguoi muon (co hoi xac nhan)
 function deleteItem(type, id) {
+    // Khong xoa thiet bi dang co phieu muon chua tra
+    if (type === 'device' && borrowedCount(id) > 0) {
+        toast('Thiết bị đang có người mượn, chưa thể xóa');
+        return;
+    }
+
     let answer = confirm('Bạn có chắc muốn xóa mục này?');
 
     if (answer === false) {
