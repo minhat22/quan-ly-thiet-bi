@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="../main.css">
 
 </head>
 <body data-page="loans">
@@ -16,16 +16,15 @@
   <div class="brand"><div class="brand-mark">G</div><div><strong>GearFlow</strong><small>EQUIPMENT MANAGER</small></div></div>
   <div class="nav-label">TỔNG QUAN</div>
   <nav class="nav">
-    <a class="active" href="main.html" data-page="trangchu"><div><img class="ico" src="./images/menu-TongQuang.png" alt=""><span class="nav-text">Trang chủ</span></div></a>
+    <a href="main.html" data-page="trangchu"><div><img class="ico" src="../image/menu-TongQuang.png" alt=""><span class="nav-text">Trang chủ</span></div></a>
   </nav>
   <div class="nav-label">QUẢN LÝ</div>
   <nav class="nav">
-    <a href="devices.html" data-page="devices"><div><img class="ico" src="./images/menu-TB.png" alt=""><span class="nav-text">Thiết bị</span></div></a>
-    <a href="customers.html" data-page="customers"><div><img class="ico" src="./images/menu-Customers.png" alt=""><span class="nav-text">Người mượn</span></div></a>
-    <a href="history.html" data-page="loans"><div><img class="ico" src="./images/menu-PhieuMuon.png" alt=""><span class="nav-text">Phiếu mượn</span></div></a>
-    <a href="observe.html" data-page="returns"><div><img class="ico" src="./images/menu-history.png" alt=""><span class="nav-text">Theo dõi trả</span></div></a>
+    <a href="devices.html" data-page="devices"><div><img class="ico" src="../image/menu-TB.png" alt=""><span class="nav-text">Thiết bị</span></div></a>
+    <a href="customers.html" data-page="customers"><div><img class="ico" src="../image/menu-Customers.png" alt=""><span class="nav-text">Người mượn</span></div></a>
+    <a href="history.html" data-page="loans"><div><img class="ico" src="../image/menu-PhieuMuon.png" alt=""><span class="nav-text">Phiếu mượn</span></div></a>
+    <a href="observe.html" data-page="returns"><div><img class="ico" src="../image/menu-history.png" alt=""><span class="nav-text">Theo dõi trả</span></div></a>
   </nav>
-  <div class="sidebar-bottom"><div class="online"><span class="dot"></span> Hệ thống hoạt động</div><p>GearFlow · Bản demo giao diện<br>Quản lý thiết bị tập trung</p></div>
 </aside>
 <main class="main">
   <div class="topbar"><div class="crumb">Workspace <span style="color:#53677d">/</span> <b id="crumb">Phiếu mượn</b></div><div class="top-right"><div class="date-chip" id="today"></div><div class="user-chip"><div class="avatar">AD</div><span>Quản trị viên</span>⌄</div></div></div>
@@ -75,6 +74,8 @@
 <div class="modal-backdrop" id="modalBackdrop"><div class="modal"><div class="modal-head"><h3 id="modalTitle">Thêm mới</h3><button class="close" onclick="closeModal()">×</button></div><form id="modalForm"><div id="modalFields" class="form-grid"></div><div class="modal-actions"><button type="button" class="btn btn-ghost" onclick="closeModal()">Hủy</button><button class="btn btn-primary" type="submit">Lưu thông tin</button></div></form></div></div>
 <div class="toast" id="toast"></div>
 
-<script src="main.js"></script>
+<script src="../javascripe/core.js"></script>
+<script src="../javascripe/history.js"></script>
+
 </body>
 </html>
