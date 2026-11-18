@@ -1,5 +1,5 @@
 
-// main.js - rieng cho TRANG CHU (main.html)
+// main.js - rieng cho TRANG CHU (main.php)
 // Nap sau core.js
 
 // Cac dong bang "Phieu muon gan day"

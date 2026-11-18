@@ -1,3 +1,4 @@
+<?php require __DIR__ . '/../includes/page_guard.php'; ?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -24,7 +25,7 @@
   </div>
   <div class="nav-label">TỔNG QUAN</div>
   <nav class="nav">
-    <a href="main.html" data-page="trangchu">
+    <a href="main.php" data-page="trangchu">
       <div>
         <img class="ico" src="../images/menu-TongQuang.png" alt="">
         <span class="nav-text">Trang chủ</span>
@@ -33,25 +34,25 @@
   </nav>
   <div class="nav-label">QUẢN LÝ</div>
   <nav class="nav">
-    <a href="devices.html" data-page="devices">
+    <a href="devices.php" data-page="devices">
       <div>
         <img class="ico" src="../images/menu-TB.png" alt="">
         <span class="nav-text">Thiết bị</span>
       </div>
     </a>
-    <a href="customers.html" data-page="customers">
+    <a href="customers.php" data-page="customers">
       <div>
         <img class="ico" src="../images/menu-Customers.png" alt="">
         <span class="nav-text">Người mượn</span>
       </div>
     </a>
-    <a href="history.html" data-page="loans">
+    <a href="history.php" data-page="loans">
       <div>
         <img class="ico" src="../images/menu-PhieuMuon.png" alt="">
         <span class="nav-text">Phiếu mượn</span>
       </div>
     </a>
-    <a href="observe.html" data-page="returns">
+    <a href="observe.php" data-page="returns">
       <div>
         <img class="ico" src="../images/menu-history.png" alt="">
         <span class="nav-text">Theo dõi trả</span>

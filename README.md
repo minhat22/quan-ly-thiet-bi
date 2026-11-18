@@ -42,3 +42,10 @@ Hệ thống bao gồm 4 bảng thực thể chính:
    * Chọn tab **Import** và tải lên tệp `.sql` đính kèm trong thư mục dự án.
 4. **Cấu hình kết nối:** Kiểm tra tệp cấu hình kết nối database trong mã nguồn (đảm bảo đúng tên database, `username` là `root`, `password` để trống nếu dùng mặc định của XAMPP).
 5. **Chạy ứng dụng:** Mở trình duyệt và truy cập địa chỉ `http://localhost/quan-ly-muon-thiet-bi`.
+<!-- Những chỗ ăn điểm bảo mật, nhớ ghi vào báo cáo:
+
+prepare và execute: Prepared Statements, chống SQL injection.
+password_verify: so mật khẩu với bản mã hóa, không lưu mật khẩu thật.
+session_regenerate_id(true): đổi mã phiên sau khi đăng nhập.
+Sai tên hay sai mật khẩu đều báo cùng một câu, để người lạ không dò được tên nào tồn tại.
+Sai đăng nhập trả mã 400, còn mã 401 để dành cho “chưa đăng nhập” (khác nhau để api() biết khi nào cần chuyển về trang đăng nhập). -->
