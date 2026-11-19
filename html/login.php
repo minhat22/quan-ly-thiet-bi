@@ -86,6 +86,10 @@ if (isset($_SESSION['user_id'])) {
       cursor: pointer;
       transition: background 0.2s;
       margin-top: 10px;
+      
+      display: flex;
+      align-items: center;
+      justify-content: center;
   }
   .login-card .btn:hover {
       background: #163d7d;
@@ -123,6 +127,7 @@ if (isset($_SESSION['user_id'])) {
 </div>
 
 <script src="../js/api.js"></script>
+
 <script>
 document.getElementById('loginForm').addEventListener('submit', async function (e) {
     e.preventDefault();

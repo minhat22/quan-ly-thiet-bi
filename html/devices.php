@@ -69,10 +69,10 @@
     <div class="top-right">
       <div class="date-chip" id="today">
       </div>
-      <div class="user-chip">
+        <div class="user-chip">
         <div class="avatar">AD</div>
-        <span>Quản trị viên</span>
-        <img class="img-down-arrow" src="../images/down-arrow.png" alt="">
+        <span><?= htmlspecialchars($_SESSION['ho_ten']) ?></span>
+        <a href="#" onclick="dangXuat(); return false;" style="margin-left:10px;font-size:12px;text-decoration:none">Đăng xuất</a>
       </div>
     </div>
   </div>
@@ -160,6 +160,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="../js/api.js"></script>
 <script src="../js/core.js"></script>
 <script src="../js/devices.js"></script>
 
