@@ -1,26 +1,31 @@
+<?php require __DIR__ . '/../includes/page_guard.php'; ?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Người mượn | GearFlow Blue</title>
+<title>Thiết bị | GearFlow Blue</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="main.css">
 
 </head>
-<body data-page="customers">
+<body data-page="devices">
 <div class="app">
 <aside class="sidebar">
   <div class="brand">
-    <div><img class="logo-img" src="../images/logo.png" alt=""></div><div>
-      <span class="title-name">GearFlow</span><small>EQUIPMENT MANAGER</small>
+    <div>
+      <img class="logo-img" src="../images/logo.png" alt="">
+    </div>
+    <div>
+      <span class="title-name">GearFlow</span>
+      <small>EQUIPMENT MANAGER</small>
     </div>
   </div>
   <div class="nav-label">TỔNG QUAN</div>
   <nav class="nav">
-    <a href="main.html" data-page="trangchu">
+    <a href="main.php" data-page="trangchu">
       <div>
         <img class="ico" src="../images/menu-TongQuang.png" alt="">
         <span class="nav-text">Trang chủ</span>
@@ -29,25 +34,25 @@
   </nav>
   <div class="nav-label">QUẢN LÝ</div>
   <nav class="nav">
-    <a href="devices.html" data-page="devices">
+    <a href="devices.php" data-page="devices">
       <div>
         <img class="ico" src="../images/menu-TB.png" alt="">
         <span class="nav-text">Thiết bị</span>
       </div>
     </a>
-    <a href="customers.html" data-page="customers">
+    <a href="customers.php" data-page="customers">
       <div>
         <img class="ico" src="../images/menu-Customers.png" alt="">
         <span class="nav-text">Người mượn</span>
       </div>
     </a>
-    <a href="history.html" data-page="loans">
+    <a href="history.php" data-page="loans">
       <div>
         <img class="ico" src="../images/menu-PhieuMuon.png" alt="">
         <span class="nav-text">Phiếu mượn</span>
       </div>
     </a>
-    <a href="observe.html" data-page="returns">
+    <a href="observe.php" data-page="returns">
       <div>
         <img class="ico" src="../images/menu-history.png" alt="">
         <span class="nav-text">Theo dõi trả</span>
@@ -57,9 +62,13 @@
 </aside>
 <main class="main">
   <div class="topbar">
-    <div class="crumb">Workspace<span class="sep">/</span><b id="crumb">Người mượn</b></div>
+    <div class="crumb">
+      Workspace <span class="sep">/</span> 
+      <b id="crumb">Thiết bị</b>
+    </div>
     <div class="top-right">
-      <div class="date-chip" id="today"></div>
+      <div class="date-chip" id="today">
+      </div>
       <div class="user-chip">
         <div class="avatar">AD</div>
         <span>Quản trị viên</span>
@@ -70,30 +79,64 @@
   <section id="page">
     <div class="page-head">
       <div class="parent">
-        <div class="eyebrow">Người mượn / 03</div>
-        <h1>Quản lý người mượn</h1>
-        <p>Lưu trữ thông tin cá nhân và đơn vị công tác.</p>
+        <div class="eyebrow">Thiết bị / 02</div>
+        <h1>Quản lý thiết bị</h1>
+        <p>Quản lý danh mục, số lượng và tình trạng thiết bị.</p>
       </div>
+      <button class="btn btn-primary" onclick="openModal('device')">Nhập Kho</button>
     </div>
 
     <div class="panel">
       <div class="toolbar">
         <div class="search">
-          <input id="searchBox" placeholder="Tìm họ tên, đơn vị, số điện thoại..." oninput="filterRows()">
+          <input id="searchBox" placeholder="Tìm tên hoặc loại thiết bị..." oninput="filterRows()">
+        </div>
+         <select id="filterStatus" onchange="filterRows()">
+          <option value="">Tất cả thiết bị</option>
+          <option value="available">Sẵn sàng</option>
+          <option value="out">Hết thiết bị</option>
+          <option value="borrowed">Đang mượn</option>
+          <option value="maintenance">Bảo trì</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+            <th>THIẾT BỊ</th>
+            <th>MÃ ID</th>
+            <th>LOẠI</th>
+            <th>TỔNG SỐ</th>
+            <th>ĐANG MƯỢN</th>
+            <th>BẢO TRÌ</th>
+            <th>SẴN SÀNG</th>
+            <th>THAO TÁC</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- bắt đầu: khung Lịch sử kho -->
+    <div class="panel panel-gap">
+      <div class="panel-head">
+        <div>
+          <h3>Lịch Sử Kho</h3>
+          <p>Các lần nhập thêm, báo hỏng, sửa xong và thanh lý</p>
         </div>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-            <th>NGƯỜI MƯỢN</th>
-            <th>MÃ ID</th>
-            <th>ĐƠN VỊ</th>
-            <th>SỐ ĐIỆN THOẠI</th>
-            <th>THAO TÁC</th>
+              <th>Thời gian</th>
+              <th>Thiết bị</th>
+              <th>Thao tác</th>
+              <th>Số lượng</th>
+              <th>Ghi chú</th>
             </tr>
           </thead>
-          <tbody id="tableBody"></tbody>
+          <tbody id="stockLogBody"></tbody>
         </table>
       </div>
     </div>
@@ -118,6 +161,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="../js/core.js"></script>
-<script src="../js/customers.js"></script>
+<script src="../js/devices.js"></script>
+
 </body>
 </html>

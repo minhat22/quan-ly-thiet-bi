@@ -1,4 +1,4 @@
-// devices.js - rieng cho THIET BI (devices.html) (nap sau core.js)
+// devices.js - rieng cho THIET BI (devices.php) (nap sau core.js)
 
 // Cac dong bang thiet bi
 function deviceRows(rows) {

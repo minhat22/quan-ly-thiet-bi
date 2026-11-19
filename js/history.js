@@ -1,4 +1,4 @@
-// history.js - rieng cho PHIEU MUON (history.html) (nap sau core.js)
+// history.js - rieng cho PHIEU MUON (history.php) (nap sau core.js)
 
 // Tim kiem + loc theo trang thai phieu
 function filterRows() {

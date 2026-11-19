@@ -1,4 +1,4 @@
-// observe.js - rieng cho THEO DOI TRA (observe.html) (nap sau core.js)
+// observe.js - rieng cho THEO DOI TRA (observe.php) (nap sau core.js)
 
 // Do thong ke va danh sach phieu chua tra
 function renderPage() {

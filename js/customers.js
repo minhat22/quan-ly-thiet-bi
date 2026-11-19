@@ -1,4 +1,4 @@
-// customers.js - rieng cho NGUOI MUON (customers.html) (nap sau core.js)
+// customers.js - rieng cho NGUOI MUON (customers.php) (nap sau core.js)
 
 // Cac dong bang nguoi muon
 function borrowerRows(rows) {
