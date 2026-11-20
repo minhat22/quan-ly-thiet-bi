@@ -12,7 +12,7 @@ function refresh_status(PDO $pdo): void {
 }
 function load_data(PDO $pdo): array {
     refresh_status($pdo);
-    $devices = $pdo->query("SELECT ID id, Ten name, Loai type, TongSo qty, BaoTri maintenance FROM ThietBi ORDER BY ID DESC")->fetchAll();
+    $devices = $pdo->query("SELECT ID id, Ten name, Model model, Loai type, TongSo qty, BaoTri maintenance FROM ThietBi ORDER BY ID DESC")->fetchAll();
     $loans = $pdo->query("SELECT p.ID id, n.HoTen borrower, n.DonVi unit, n.SDT phone, p.NgayMuon borrowDate, p.HenTra dueDate, COALESCE(p.NgayTra,'') returnDate, p.TrangThai status FROM PhieuMuon p JOIN NguoiMuon n ON n.ID=p.ID_NguoiMuon ORDER BY p.ID DESC")->fetchAll();
     foreach ($loans as &$loan) {
         $s = $pdo->prepare("SELECT c.ID_ThietBi deviceId, t.Ten name, c.SoLuong qty FROM ChiTietPhieu c JOIN ThietBi t ON t.ID=c.ID_ThietBi WHERE c.ID_Phieu=?");
@@ -72,13 +72,32 @@ function load_stats(PDO $pdo): array {
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') json_ok(load_data($pdo));
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_error('Sai phương thức',405);
-$in=body_json(); $action=$in['action']??'';
+$in=body_json(); $action=$in['action']??''; $notice=null;
 try {
   if ($action==='device_create' || $action==='device_update') {
-    $name=trim($in['name']??''); $type=trim($in['type']??''); $qty=(int)($in['qty']??0); $id=(int)($in['id']??0);
-    if($name===''||$type===''||$qty<0||$qty>100000) json_error('Thông tin thiết bị không hợp lệ');
-    if($action==='device_create') { $s=$pdo->prepare('INSERT INTO ThietBi(Ten,Loai,TongSo,BaoTri) VALUES(?,?,?,0)'); $s->execute([$name,$type,$qty]); }
-    else { $c=$pdo->prepare('SELECT TongSo,BaoTri FROM ThietBi WHERE ID=?');$c->execute([$id]);$old=$c->fetch();if(!$old)json_error('Không tìm thấy thiết bị',404);$b=$pdo->prepare("SELECT COALESCE(SUM(c.SoLuong),0) FROM ChiTietPhieu c JOIN PhieuMuon p ON p.ID=c.ID_Phieu WHERE c.ID_ThietBi=? AND p.NgayTra IS NULL");$b->execute([$id]);if($qty < (int)$old['BaoTri'] + (int)$b->fetchColumn())json_error('Tổng số không thể nhỏ hơn số đang mượn cộng số bảo trì');$s=$pdo->prepare('UPDATE ThietBi SET Ten=?,Loai=?,TongSo=? WHERE ID=?'); $s->execute([$name,$type,$qty,$id]); }
+    $name=trim($in['name']??''); $model=trim($in['model']??''); $type=trim($in['type']??''); $qty=(int)($in['qty']??0); $id=(int)($in['id']??0);
+    if($name===''||$model===''||$type===''||mb_strlen($model)>100||$qty<0||$qty>100000) json_error('Thông tin thiết bị không hợp lệ (cần nhập Tên, Model, Loại và số lượng)');
+    if($action==='device_create') {
+      // NHẬP KHO: kiểm tra Model. Trùng -> cộng thêm số lượng vào thiết bị cũ; chưa có -> tạo thiết bị mới.
+      if($qty<1) json_error('Số lượng nhập kho phải từ 1 trở lên');
+      $pdo->beginTransaction();
+      $f=$pdo->prepare('SELECT ID,Ten,TongSo FROM ThietBi WHERE Model=? FOR UPDATE'); $f->execute([$model]); $exist=$f->fetch();
+      if($exist) {
+        $newTotal=(int)$exist['TongSo']+$qty;
+        if($newTotal>100000){ $pdo->rollBack(); json_error('Tổng số lượng vượt quá giới hạn cho phép'); }
+        $u=$pdo->prepare('UPDATE ThietBi SET TongSo=? WHERE ID=?'); $u->execute([$newTotal,$exist['ID']]);
+        $l=$pdo->prepare('INSERT INTO LichSuKho(ID_ThietBi,ThaoTac,SoLuong,GhiChu) VALUES(?,?,?,?)'); $l->execute([$exist['ID'],'add',$qty,'Nhập kho trùng model '.$model]);
+        $notice="Model {$model} đã có ({$exist['Ten']}): đã cộng thêm {$qty}, tổng mới {$newTotal}";
+      } else {
+        $s=$pdo->prepare('INSERT INTO ThietBi(Ten,Model,Loai,TongSo,BaoTri) VALUES(?,?,?,?,0)'); $s->execute([$name,$model,$type,$qty]);
+        $l=$pdo->prepare('INSERT INTO LichSuKho(ID_ThietBi,ThaoTac,SoLuong,GhiChu) VALUES(?,?,?,?)'); $l->execute([$pdo->lastInsertId(),'add',$qty,'Nhập kho model mới '.$model]);
+        $notice="Đã thêm thiết bị mới, model {$model}";
+      }
+      $pdo->commit();
+    }
+    else { $c=$pdo->prepare('SELECT TongSo,BaoTri FROM ThietBi WHERE ID=?');$c->execute([$id]);$old=$c->fetch();if(!$old)json_error('Không tìm thấy thiết bị',404);
+      $dup=$pdo->prepare('SELECT COUNT(*) FROM ThietBi WHERE Model=? AND ID<>?');$dup->execute([$model,$id]);if($dup->fetchColumn())json_error('Model này đã tồn tại ở thiết bị khác');
+      $b=$pdo->prepare("SELECT COALESCE(SUM(c.SoLuong),0) FROM ChiTietPhieu c JOIN PhieuMuon p ON p.ID=c.ID_Phieu WHERE c.ID_ThietBi=? AND p.NgayTra IS NULL");$b->execute([$id]);if($qty < (int)$old['BaoTri'] + (int)$b->fetchColumn())json_error('Tổng số không thể nhỏ hơn số đang mượn cộng số bảo trì');$s=$pdo->prepare('UPDATE ThietBi SET Ten=?,Model=?,Loai=?,TongSo=? WHERE ID=?'); $s->execute([$name,$model,$type,$qty,$id]); }
   } elseif($action==='device_delete') {
     $id=(int)($in['id']??0); $c=$pdo->prepare("SELECT COUNT(*) FROM ChiTietPhieu c JOIN PhieuMuon p ON p.ID=c.ID_Phieu WHERE c.ID_ThietBi=? AND p.TrangThai<>'Đã trả'");$c->execute([$id]); if($c->fetchColumn())json_error('Thiết bị đang được mượn, không thể xóa');
     $c=$pdo->prepare('SELECT COUNT(*) FROM ChiTietPhieu WHERE ID_ThietBi=?');$c->execute([$id]);if($c->fetchColumn())json_error('Thiết bị đã có lịch sử mượn, không thể xóa');
@@ -119,5 +138,5 @@ try {
     $d=$pdo->prepare('DELETE FROM PhieuMuon WHERE ID=?');$d->execute([$id]);
     $pdo->commit();
   } else json_error('Hành động không hợp lệ');
-  json_ok(load_data($pdo));
+  $out=load_data($pdo); if($notice!==null)$out['notice']=$notice; json_ok($out);
 } catch(Throwable $e) { if($pdo->inTransaction())$pdo->rollBack(); error_log((string)$e); json_error('Không thể thực hiện thao tác. Kiểm tra cấu trúc CSDL và dữ liệu nhập.',500); }

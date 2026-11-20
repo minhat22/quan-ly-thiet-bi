@@ -14,6 +14,7 @@ function deviceRows(rows) {
                     </div>
                 </td>
                 <td>TB-${String(device.id).padStart(3, '0')}</td>
+                <td>${escapeHtml(device.model || '')}</td>
                 <td>${escapeHtml(device.type)}</td>
                 <td>${device.qty}</td>
                 <td>${borrowedCount(device.id)}</td>
@@ -41,7 +42,7 @@ function filterRows() {
     let status = statusBox ? statusBox.value : '';
 
     let result = data.devices.filter(function (device) {
-        let information = (device.name + device.type).toLowerCase();
+        let information = (device.name + ' ' + (device.model || '') + ' ' + device.type).toLowerCase();
 
         let match = true;
 

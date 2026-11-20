@@ -45,7 +45,7 @@ function toast(message) {
 
     setTimeout(function () {
         toastBox.classList.remove('show');
-    }, 2200);
+    }, 3800);
 }
 
 // Chon mau cho tung trang thai
@@ -330,6 +330,7 @@ const formFields = {
     // Form thiet bi
     device: [
         ['name', 'Tên thiết bị', 'text'],
+        ['model', 'Model', 'text'],
         ['type', 'Loại thiết bị', 'text'],
         ['qty', 'Số lượng', 'number']
     ],
@@ -517,7 +518,7 @@ function loanItemRowHtml() {
     let options = data.devices.map(function (device) {
         let ready = readyCount(device);
 
-        return `<option value="${device.id}" ${ready === 0 ? 'disabled' : ''}>${escapeHtml(device.name)} (còn ${ready})</option>`;
+        return `<option value="${device.id}" ${ready === 0 ? 'disabled' : ''}>${escapeHtml(device.name)}${device.model ? ' - ' + escapeHtml(device.model) : ''} (còn ${ready})</option>`;
     }).join('');
 
     return `
@@ -585,18 +586,21 @@ $('#modalForm').addEventListener('submit', async function (event) {
     event.preventDefault();
     const formData = new FormData(event.target);
     const obj = Object.fromEntries(formData.entries());
+    let saveNotice = '';
     try {
         if (modalType === 'stock') {
             await api('../api/data.php','POST',{action:'stock',id:editing.id,operation:obj.action,amount:Number(obj.amount),note:obj.note || ''});
         } else if (modalType === 'device') {
             const isEditingDevice = modalType === 'device' && editing !== null;
-            await api('../api/data.php', 'POST', {
+            const res = await api('../api/data.php', 'POST', {
                 action: isEditingDevice ? 'device_update' : 'device_create',
                 id: isEditingDevice ? Number(editing.id) : undefined,
                 name: String(obj.name || '').trim(),
+                model: String(obj.model || '').trim(),
                 type: String(obj.type || '').trim(),
                 qty: Number(obj.qty)
             });
+            saveNotice = res && res.notice ? res.notice : '';
         } else if (modalType === 'loan') {
             const borrowerId = Number(obj.borrowerId || 0);
             const borrowerExists = data.customer.some(person => Number(person.id) === borrowerId);
@@ -647,7 +651,7 @@ $('#modalForm').addEventListener('submit', async function (event) {
         } else if (modalType === 'borrower') {
             await api('../api/borrowers.php','POST',{action:editing?'update':'create',id:editing?.id,hoTen:obj.name,donVi:obj.unit,sdt:obj.phone});
         }
-        await reloadData(); closeModal(); render(); toast('Đã lưu thông tin vào MySQL');
+        await reloadData(); closeModal(); render(); toast(saveNotice || 'Đã lưu thông tin vào MySQL');
     } catch (error) {
         // Khi số lượng yêu cầu vượt quá số lượng còn sẵn trong kho,
         // hiển thị alert đơn giản để người dùng nhận biết ngay.

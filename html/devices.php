@@ -90,7 +90,7 @@
     <div class="panel">
       <div class="toolbar">
         <div class="search">
-          <input id="searchBox" placeholder="Tìm tên hoặc loại thiết bị..." oninput="filterRows()">
+          <input id="searchBox" placeholder="Tìm tên, model hoặc loại thiết bị..." oninput="filterRows()">
         </div>
          <select id="filterStatus" onchange="filterRows()">
           <option value="">Tất cả thiết bị</option>
@@ -106,6 +106,7 @@
             <tr>
             <th>THIẾT BỊ</th>
             <th>MÃ ID</th>
+            <th>MODEL</th>
             <th>LOẠI</th>
             <th>TỔNG SỐ</th>
             <th>ĐANG MƯỢN</th>
@@ -162,8 +163,8 @@
 <div class="toast" id="toast"></div>
 
 <script src="../js/api.js?v=20261120-stock-alert-4"></script>
-<script src="../js/core.js?v=20261120-clean-8"></script>
-<script src="../js/devices.js?v=20261120-stock-alert-4"></script>
+<script src="../js/core.js?v=20261121-model-1"></script>
+<script src="../js/devices.js?v=20261121-model-1"></script>
 
 </body>
 </html>

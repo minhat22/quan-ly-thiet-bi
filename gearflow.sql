@@ -32,9 +32,11 @@ CREATE TABLE IF NOT EXISTS NguoiMuon (
 CREATE TABLE IF NOT EXISTS ThietBi (
   ID       INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   Ten      VARCHAR(150) NOT NULL,
+  Model    VARCHAR(100) NOT NULL,                -- model máy, duy nhất: nhập trùng model sẽ cộng dồn số lượng
   Loai     VARCHAR(100) NOT NULL,
   TongSo   INT UNSIGNED NOT NULL DEFAULT 0,   -- tổng số lượng trong kho
   BaoTri   INT UNSIGNED NOT NULL DEFAULT 0,   -- đang bảo trì
+  UNIQUE KEY uq_Model (Model),
   INDEX idx_Ten  (Ten),
   INDEX idx_Loai (Loai)
 ) ENGINE=InnoDB;
@@ -100,12 +102,12 @@ INSERT INTO NguoiMuon (HoTen, DonVi, SDT) VALUES
 ('Lê Thảo Vy',      'Khoa Điện - Điện tử',     '0987654321');
 
 -- Thiết bị
-INSERT INTO ThietBi (Ten, Loai, TongSo, BaoTri) VALUES
-('Laptop Dell Latitude', 'Máy tính', 12, 0),
-('Máy chiếu Epson', 'Thiết bị trình chiếu', 6, 0),
-('Bộ Arduino Uno', 'Thiết bị thực hành', 20, 0),
-('Camera Canon', 'Thiết bị ghi hình', 4, 1),
-('Máy đo điện đa năng', 'Dụng cụ đo', 10, 0);
+INSERT INTO ThietBi (Ten, Model, Loai, TongSo, BaoTri) VALUES
+('Laptop Dell Latitude', 'Latitude 5420', 'Máy tính', 12, 0),
+('Máy chiếu Epson', 'EB-X06', 'Thiết bị trình chiếu', 6, 0),
+('Bộ Arduino Uno', 'Arduino Uno R3', 'Thiết bị thực hành', 20, 0),
+('Camera Canon', 'EOS 200D', 'Thiết bị ghi hình', 4, 1),
+('Máy đo điện đa năng', 'DT-830B', 'Dụng cụ đo', 10, 0);
 
 -- Phiếu mượn mẫu
 INSERT INTO PhieuMuon (ID_NguoiMuon, NgayMuon, HenTra, NgayTra, TrangThai) VALUES
