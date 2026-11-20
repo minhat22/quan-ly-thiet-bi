@@ -8,11 +8,11 @@ function loanRows(rows) {
         return `
             <tr>
                 <td>#${loan.id}</td>
-                <td>${loan.borrower}</td>
-                <td>${loanItemsText(loan)}</td>
+                <td>${escapeHtml(loan.borrower)}</td>
+                <td>${escapeHtml(loanItemsText(loan))}</td>
                 <td>${loan.dueDate}</td>
                 <td>
-                    <span class="status ${statusClass(loan.status)}">${loan.status}</span>
+                    <span class="status ${statusClass(loan.status)}">${escapeHtml(loan.status)}</span>
                 </td>
             </tr>
         `;
@@ -20,8 +20,88 @@ function loanRows(rows) {
     }).join('');
 }
 
+// Ve bieu do cot 6 thang tu so lieu that (chieu cao tinh theo % cua gia tri lon nhat)
+function renderChart(months) {
+    let box = document.getElementById('loanChart');
+    if (box === null) return;
+
+    let max = 1;
+    months.forEach(function (m) {
+        max = Math.max(max, m.borrowed, m.returned);
+    });
+
+    box.innerHTML = months.map(function (m) {
+        let h1 = Math.round(m.borrowed * 100 / max);
+        let h2 = Math.round(m.returned * 100 / max);
+        return '<div class="bar-group">' +
+            '<div class="bar" style="height:' + h1 + '%" title="Phiếu mượn: ' + m.borrowed + '"></div>' +
+            '<div class="bar alt" style="height:' + h2 + '%" title="Phiếu trả: ' + m.returned + '"></div>' +
+            '<span class="bar-label">' + escapeHtml(m.label) + ' (' + m.borrowed + '/' + m.returned + ')</span>' +
+            '</div>';
+    }).join('');
+
+    // So sanh thang nay voi thang truoc
+    let trend = document.getElementById('chartTrend');
+    if (trend !== null && months.length >= 2) {
+        let cur = months[months.length - 1].borrowed;
+        let prev = months[months.length - 2].borrowed;
+        let text = '—';
+        let cls = 'status blue';
+        if (prev > 0) {
+            let pct = Math.round((cur - prev) * 100 / prev);
+            text = (pct >= 0 ? '+' : '') + pct + '% so với tháng trước';
+            cls = 'status ' + (pct >= 0 ? 'green' : 'red');
+        } else if (cur > 0) {
+            text = 'Tháng này: ' + cur + ' phiếu';
+        }
+        trend.textContent = text;
+        trend.className = cls;
+    }
+}
+
+// Danh sach xep hang (top thiet bi / top nguoi muon)
+function renderRank(id, rows, line) {
+    let box = document.getElementById(id);
+    if (box === null) return;
+
+    if (rows.length === 0) {
+        box.innerHTML = '<p class="rank-empty">Chưa có dữ liệu</p>';
+        return;
+    }
+
+    box.innerHTML = rows.map(function (row, index) {
+        return '<div class="rank-item">' +
+            '<span class="rank-no">' + (index + 1) + '</span>' +
+            '<div class="rank-info"><strong>' + escapeHtml(row.name) + '</strong>' +
+            '<small>' + escapeHtml(line(row)) + '</small></div>' +
+            '</div>';
+    }).join('');
+}
+
+// Do thong ke that tu API vao trang chu
+function renderStats() {
+    let st = data.stats;
+
+    renderChart(st.months);
+
+    renderRank('topDevices', st.topDevices, function (row) {
+        return row.qty + ' thiết bị · ' + row.loans + ' phiếu';
+    });
+    renderRank('topBorrowers', st.topBorrowers, function (row) {
+        return row.unit + ' · ' + row.loans + ' phiếu';
+    });
+
+    setText('totalLoans', st.totalLoans);
+    setText('returnRate', st.returnRate + '%');
+    setText('overdueRate', st.overdueRate + '%');
+    document.getElementById('returnBar').style.width = st.returnRate + '%';
+    document.getElementById('overdueBar').style.width = st.overdueRate + '%';
+}
+
 // Do du lieu vao trang chu
 function renderPage() {
+    renderStats();
+
 
     // Thong ke 4 o tren cung
     let total = 0;
@@ -72,7 +152,7 @@ function renderPage() {
                 '<img class="activity-icon" src="../images/' + icon + '" alt="">' +
                 '<div>' +
                 '<strong>' + title + '</strong>' +
-                '<p>' + act.borrower + ' · ' + act.summary + '</p>' +
+                '<p>' + escapeHtml(act.borrower) + ' · ' + escapeHtml(act.summary) + '</p>' +
                 '<time>' + formatTime(act.time) + '</time>' +
                 '</div>' +
                 '</div>';

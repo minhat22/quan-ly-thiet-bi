@@ -10,6 +10,7 @@ async function reloadData() {
     data.loans = (data.loans || []).map(l => ({...l, id:Number(l.id), items:(l.items || []).map(i => ({...i, deviceId:Number(i.deviceId), qty:Number(i.qty)}))}));
     data.stockLog = data.stockLog || [];
     data.activities = data.activities || [];
+    data.stats = data.stats || { months: [], topDevices: [], topBorrowers: [], totalLoans: 0, returnRate: 0, overdueRate: 0 };
     dataReady = true;
 }
 
@@ -266,22 +267,27 @@ function formatTime(t) {
 // Cac dong bang phieu muon day du (trang Phieu muon + Theo doi tra)
 function fullLoanRows(rows) {
     return rows.map(function (loan) {
-        let action = '—';
+        let action = `<button class="action-btn" onclick="showLoanDetail(${loan.id})">Chi tiết</button>`;
 
         if (loan.status !== 'Đã trả') {
-            action = `<button class="action-btn" onclick="markReturned(${loan.id})">Xác nhận trả</button>`;
+            action += `<button class="action-btn" onclick="markReturned(${loan.id})">Xác nhận trả</button>`;
+        }
+
+        // Nut Xoa chi hien o trang Phieu muon
+        if (currentPage === 'loans') {
+            action += `<button class="action-btn danger" onclick="deleteLoan(${loan.id})">Xóa</button>`;
         }
 
         return `
             <tr>
                 <td>#${loan.id}</td>
-                <td>${loan.borrower}</td>
-                <td>${loan.items.map(function (item) { return itemName(item) + ' × ' + item.qty; }).join('<br>')}</td>
+                <td>${escapeHtml(loan.borrower)}</td>
+                <td>${loan.items.map(function (item) { return escapeHtml(itemName(item)) + ' × ' + item.qty; }).join('<br>')}</td>
                 <td>${loan.items.reduce(function (sum, item) { return sum + Number(item.qty); }, 0)}</td>
                 <td>${loan.borrowDate}</td>
                 <td>${loan.dueDate}</td>
                 <td>
-                    <span class="status ${statusClass(loan.status)}">${loan.status}</span>
+                    <span class="status ${statusClass(loan.status)}">${escapeHtml(loan.status)}</span>
                 </td>
                 <td>${action}</td>
             </tr>
@@ -410,7 +416,7 @@ function openModal(type, item = null) {
                 <select name="${key}" id="loanBorrowerSelect" onchange="fillBorrowerDetails(this.value)" required ${data.customer.length === 0 ? 'disabled' : ''}>
                     <option value="">Chọn người mượn</option>
                     ${data.customer.map(function (borrower) {
-                        return `<option value="${borrower.id}">${borrower.name} — ${borrower.unit} — ${borrower.phone}</option>`;
+                        return `<option value="${borrower.id}">${escapeHtml(borrower.name)} — ${escapeHtml(borrower.unit)} — ${escapeHtml(borrower.phone)}</option>`;
                     }).join('')}
                 </select>
                 <small class="loan-borrower-hint">
@@ -434,9 +440,9 @@ function openModal(type, item = null) {
 
                     ${data.customer.map(function (borrower) {
                         return `
-                            <option value="${borrower.name}"
+                            <option value="${escapeHtml(borrower.name)}"
                                 ${borrower.name === value ? 'selected' : ''}>
-                                ${borrower.name}
+                                ${escapeHtml(borrower.name)}
                             </option>
                         `;
 
@@ -461,9 +467,9 @@ function openModal(type, item = null) {
 
                     ${data.devices.map(function (device) {
                         return `
-                            <option value="${device.name}"
+                            <option value="${escapeHtml(device.name)}"
                                 ${device.name === value ? 'selected' : ''}>
-                                ${device.name}
+                                ${escapeHtml(device.name)}
                             </option>
                         `;
 
@@ -479,7 +485,7 @@ function openModal(type, item = null) {
                 <input
                     name="${key}"
                     type="${kind}"
-                    value="${value}"
+                    value="${escapeHtml(value)}"
                     ${key === 'qty' ? 'min="1"' : ''}
                     ${key === 'phone' ? 'pattern="[0-9 .+]{9,15}" title="Số điện thoại gồm 9 đến 15 chữ số" placeholder="VD: 0901 234 567"' : ''}
                     required
@@ -510,7 +516,7 @@ function loanItemRowHtml() {
     let options = data.devices.map(function (device) {
         let ready = readyCount(device);
 
-        return `<option value="${device.id}" ${ready === 0 ? 'disabled' : ''}>${device.name} (còn ${ready})</option>`;
+        return `<option value="${device.id}" ${ready === 0 ? 'disabled' : ''}>${escapeHtml(device.name)} (còn ${ready})</option>`;
     }).join('');
 
     return `
@@ -655,6 +661,98 @@ async function deleteItem(type, id) {
 async function markReturned(id) {
     try { await api('../api/data.php','POST',{action:'loan_return',id}); await reloadData(); render(); toast('Đã xác nhận hoàn trả thiết bị'); }
     catch(error) { toast(error.message); }
+}
+
+// ===== Chi tiet phieu + In phieu + Xoa phieu =====
+
+// Mo cua so chi tiet phieu (tu tao khung HTML neu chua co)
+function showLoanDetail(id) {
+    let loan = data.loans.find(function (l) {
+        return Number(l.id) === Number(id);
+    });
+    if (loan === undefined) return;
+
+    let box = document.getElementById('detailBackdrop');
+    if (box === null) {
+        box = document.createElement('div');
+        box.id = 'detailBackdrop';
+        box.className = 'modal-backdrop';
+        document.body.appendChild(box);
+    }
+
+    let totalQty = loan.items.reduce(function (sum, item) {
+        return sum + Number(item.qty);
+    }, 0);
+
+    let itemRows = loan.items.map(function (item, index) {
+        return '<tr><td>' + (index + 1) + '</td><td>' + escapeHtml(itemName(item)) +
+               '</td><td>' + item.qty + '</td></tr>';
+    }).join('');
+
+    box.innerHTML =
+        '<div class="modal detail-modal">' +
+            '<div class="modal-head no-print">' +
+                '<h3>Chi tiết phiếu mượn #' + loan.id + '</h3>' +
+                '<button class="close" onclick="closeDetail()"><span class="close-button">x</span></button>' +
+            '</div>' +
+            '<div class="print-title">' +
+                '<h2>PHIẾU MƯỢN THIẾT BỊ</h2>' +
+                '<p>Mã phiếu: #' + loan.id + '</p>' +
+            '</div>' +
+            '<div class="detail-info">' +
+                '<div><span>Người mượn</span><strong>' + escapeHtml(loan.borrower) + '</strong></div>' +
+                '<div><span>Đơn vị</span><strong>' + escapeHtml(loan.unit || '—') + '</strong></div>' +
+                '<div><span>Số điện thoại</span><strong>' + escapeHtml(loan.phone || '—') + '</strong></div>' +
+                '<div><span>Trạng thái</span><strong>' + escapeHtml(loan.status) + '</strong></div>' +
+                '<div><span>Ngày mượn</span><strong>' + formatTime(loan.borrowDate) + '</strong></div>' +
+                '<div><span>Hẹn trả</span><strong>' + formatTime(loan.dueDate) + '</strong></div>' +
+                '<div><span>Ngày trả thực tế</span><strong>' + (loan.returnDate ? formatTime(loan.returnDate) : 'Chưa trả') + '</strong></div>' +
+                '<div><span>Tổng số lượng</span><strong>' + totalQty + '</strong></div>' +
+            '</div>' +
+            '<table class="detail-table">' +
+                '<thead><tr><th>STT</th><th>Thiết bị</th><th>Số lượng</th></tr></thead>' +
+                '<tbody>' + itemRows + '</tbody>' +
+            '</table>' +
+            '<div class="print-sign">' +
+                '<div><strong>Người mượn</strong><small>(Ký, ghi rõ họ tên)</small></div>' +
+                '<div><strong>Người cho mượn</strong><small>(Ký, ghi rõ họ tên)</small></div>' +
+            '</div>' +
+            '<div class="modal-actions no-print">' +
+                '<button type="button" class="btn btn-ghost" onclick="closeDetail()">Đóng</button>' +
+                '<button type="button" class="btn btn-primary" onclick="window.print()">In phiếu</button>' +
+            '</div>' +
+        '</div>';
+
+    box.classList.add('show');
+}
+
+// Dong cua so chi tiet
+function closeDetail() {
+    let box = document.getElementById('detailBackdrop');
+    if (box !== null) box.classList.remove('show');
+}
+
+// Xoa / huy phieu muon (co hoi xac nhan)
+async function deleteLoan(id) {
+    let loan = data.loans.find(function (l) {
+        return Number(l.id) === Number(id);
+    });
+    if (loan === undefined) return;
+
+    let message = 'Bạn có chắc muốn xóa phiếu #' + id + ' của ' + loan.borrower + '?';
+    if (loan.status !== 'Đã trả') {
+        message += '\n\nPhiếu chưa trả: thiết bị sẽ được hoàn lại vào kho.';
+    }
+    if (!confirm(message)) return;
+
+    try {
+        await api('../api/data.php', 'POST', { action: 'loan_delete', id: Number(id) });
+        await reloadData();
+        render();
+        toast('Đã xóa phiếu mượn #' + id);
+    } catch (error) {
+        toast(error.message);
+    }
 }
 
 // Hien ngay hien tai tren thanh tren cung

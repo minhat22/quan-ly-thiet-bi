@@ -92,6 +92,13 @@
         <div class="search">
           <input id="searchBox" placeholder="Tìm mã phiếu hoặc người mượn..." oninput="filterRows()">
         </div>
+        <label class="date-filter">Từ ngày
+          <input type="date" id="fromDate" onchange="filterRows()">
+        </label>
+        <label class="date-filter">Đến ngày
+          <input type="date" id="toDate" onchange="filterRows()">
+        </label>
+        <button type="button" class="btn btn-ghost" onclick="clearDateFilter()">Xóa lọc ngày</button>
         <select id="filterStatus" onchange="filterRows()">
           <option value="">Tất cả trạng thái</option>
           <option>Đang mượn</option>

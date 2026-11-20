@@ -13,7 +13,7 @@ function refresh_status(PDO $pdo): void {
 function load_data(PDO $pdo): array {
     refresh_status($pdo);
     $devices = $pdo->query("SELECT ID id, Ten name, Loai type, Icon icon, TongSo qty, BaoTri maintenance FROM ThietBi ORDER BY ID DESC")->fetchAll();
-    $loans = $pdo->query("SELECT p.ID id, n.HoTen borrower, p.NgayMuon borrowDate, p.HenTra dueDate, COALESCE(p.NgayTra,'') returnDate, p.TrangThai status FROM PhieuMuon p JOIN NguoiMuon n ON n.ID=p.ID_NguoiMuon ORDER BY p.ID DESC")->fetchAll();
+    $loans = $pdo->query("SELECT p.ID id, n.HoTen borrower, n.DonVi unit, n.SDT phone, p.NgayMuon borrowDate, p.HenTra dueDate, COALESCE(p.NgayTra,'') returnDate, p.TrangThai status FROM PhieuMuon p JOIN NguoiMuon n ON n.ID=p.ID_NguoiMuon ORDER BY p.ID DESC")->fetchAll();
     foreach ($loans as &$loan) {
         $s = $pdo->prepare("SELECT c.ID_ThietBi deviceId, t.Ten name, c.SoLuong qty FROM ChiTietPhieu c JOIN ThietBi t ON t.ID=c.ID_ThietBi WHERE c.ID_Phieu=?");
         $s->execute([$loan['id']]); $loan['items'] = $s->fetchAll();
@@ -23,7 +23,39 @@ function load_data(PDO $pdo): array {
     $stock = $pdo->query("SELECT l.ID_ThietBi deviceId,t.Ten deviceName,l.ThaoTac action,l.SoLuong amount,l.GhiChu note,l.ThoiGian time FROM LichSuKho l JOIN ThietBi t ON t.ID=l.ID_ThietBi ORDER BY l.ID DESC LIMIT 50")->fetchAll();
     $activities = $pdo->query("SELECT Loai type,NguoiMuon borrower,TomTat summary,ThoiGian time FROM HoatDong ORDER BY ID DESC LIMIT 30")->fetchAll();
     $borrowers=$pdo->query("SELECT ID id,HoTen name,DonVi unit,SDT phone FROM NguoiMuon ORDER BY ID DESC")->fetchAll();
-    return ['devices'=>$devices,'customer'=>$borrowers,'loans'=>$loans,'stockLog'=>$stock,'activities'=>$activities];
+    return ['devices'=>$devices,'customer'=>$borrowers,'loans'=>$loans,'stockLog'=>$stock,'activities'=>$activities,'stats'=>load_stats($pdo)];
+}
+// Thong ke cho trang chu: so luot muon/tra 6 thang gan day, top thiet bi, top nguoi muon
+function load_stats(PDO $pdo): array {
+    $months = [];
+    for ($i = 5; $i >= 0; $i--) {
+        $key = date('Y-m', strtotime("first day of -$i month"));
+        $months[$key] = ['month' => $key, 'label' => 'T' . (int)substr($key, 5, 2), 'borrowed' => 0, 'returned' => 0];
+    }
+    $from = date('Y-m-01', strtotime('first day of -5 month'));
+    $s = $pdo->prepare("SELECT DATE_FORMAT(NgayMuon,'%Y-%m') m, COUNT(*) c FROM PhieuMuon WHERE NgayMuon >= ? GROUP BY m");
+    $s->execute([$from]);
+    foreach ($s->fetchAll() as $r) if (isset($months[$r['m']])) $months[$r['m']]['borrowed'] = (int)$r['c'];
+    $s = $pdo->prepare("SELECT DATE_FORMAT(NgayTra,'%Y-%m') m, COUNT(*) c FROM PhieuMuon WHERE NgayTra IS NOT NULL AND NgayTra >= ? GROUP BY m");
+    $s->execute([$from]);
+    foreach ($s->fetchAll() as $r) if (isset($months[$r['m']])) $months[$r['m']]['returned'] = (int)$r['c'];
+
+    $topDevices = $pdo->query("SELECT t.Ten name, t.Icon icon, COUNT(DISTINCT c.ID_Phieu) loans, SUM(c.SoLuong) qty FROM ChiTietPhieu c JOIN ThietBi t ON t.ID=c.ID_ThietBi GROUP BY t.ID, t.Ten, t.Icon ORDER BY qty DESC, loans DESC LIMIT 5")->fetchAll();
+    $topBorrowers = $pdo->query("SELECT n.HoTen name, n.DonVi unit, COUNT(*) loans FROM PhieuMuon p JOIN NguoiMuon n ON n.ID=p.ID_NguoiMuon GROUP BY n.ID, n.HoTen, n.DonVi ORDER BY loans DESC, n.HoTen LIMIT 5")->fetchAll();
+    foreach ($topDevices as &$d) { $d['loans'] = (int)$d['loans']; $d['qty'] = (int)$d['qty']; } unset($d);
+    foreach ($topBorrowers as &$b) { $b['loans'] = (int)$b['loans']; } unset($b);
+
+    $total = (int)$pdo->query("SELECT COUNT(*) FROM PhieuMuon")->fetchColumn();
+    $returned = (int)$pdo->query("SELECT COUNT(*) FROM PhieuMuon WHERE NgayTra IS NOT NULL")->fetchColumn();
+    $overdue = (int)$pdo->query("SELECT COUNT(*) FROM PhieuMuon WHERE TrangThai='Quá hạn'")->fetchColumn();
+    return [
+        'months' => array_values($months),
+        'topDevices' => $topDevices,
+        'topBorrowers' => $topBorrowers,
+        'totalLoans' => $total,
+        'returnRate' => $total ? round($returned * 100 / $total) : 0,
+        'overdueRate' => $total ? round($overdue * 100 / $total) : 0,
+    ];
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') json_ok(load_data($pdo));
@@ -66,6 +98,14 @@ try {
     $s=$pdo->prepare('INSERT INTO PhieuMuon(ID_NguoiMuon,NgayMuon,HenTra,TrangThai) VALUES(?,?,?,?)');$s->execute([$bid,$bd,$due,$due<date('Y-m-d')?'Quá hạn':'Đang mượn']);$pid=$pdo->lastInsertId();$detail=$pdo->prepare('INSERT INTO ChiTietPhieu(ID_Phieu,ID_ThietBi,SoLuong) VALUES(?,?,?)');foreach($merged as $did=>$q)$detail->execute([$pid,$did,$q]);$sum=[];foreach($merged as $did=>$q){$s=$pdo->prepare('SELECT Ten FROM ThietBi WHERE ID=?');$s->execute([$did]);$sum[]=$q.' '.$s->fetchColumn();}$a=$pdo->prepare("INSERT INTO HoatDong(Loai,NguoiMuon,TomTat) VALUES('create',?,?)");$a->execute([$borrower,implode(', ',$sum)]);$pdo->commit();
   } elseif($action==='loan_return') {
     $id=(int)($in['id']??0);$pdo->beginTransaction();$s=$pdo->prepare("SELECT p.ID,n.HoTen FROM PhieuMuon p JOIN NguoiMuon n ON n.ID=p.ID_NguoiMuon WHERE p.ID=? FOR UPDATE");$s->execute([$id]);$p=$s->fetch();if(!$p){$pdo->rollBack();json_error('Không tìm thấy phiếu mượn',404);} $u=$pdo->prepare("UPDATE PhieuMuon SET NgayTra=CURDATE(),TrangThai='Đã trả' WHERE ID=? AND NgayTra IS NULL");$u->execute([$id]);if($u->rowCount()){$a=$pdo->prepare("INSERT INTO HoatDong(Loai,NguoiMuon,TomTat) VALUES('return',?,'Đã hoàn trả thiết bị')");$a->execute([$p['HoTen']]);}$pdo->commit();
+  } elseif($action==='loan_delete') {
+    // Xoa / huy phieu: ChiTietPhieu tu xoa theo (ON DELETE CASCADE). Ton kho tinh tu phieu chua tra nen tu hoan lai.
+    $id=(int)($in['id']??0);
+    $pdo->beginTransaction();
+    $s=$pdo->prepare('SELECT ID FROM PhieuMuon WHERE ID=? FOR UPDATE');$s->execute([$id]);
+    if(!$s->fetch()){$pdo->rollBack();json_error('Không tìm thấy phiếu mượn',404);}
+    $d=$pdo->prepare('DELETE FROM PhieuMuon WHERE ID=?');$d->execute([$id]);
+    $pdo->commit();
   } else json_error('Hành động không hợp lệ');
   json_ok(load_data($pdo));
 } catch(Throwable $e) { if($pdo->inTransaction())$pdo->rollBack(); error_log((string)$e); json_error('Không thể thực hiện thao tác. Kiểm tra cấu trúc CSDL và dữ liệu nhập.',500); }

@@ -126,47 +126,16 @@
         <div class="panel-head">
           <div>
             <h3>Hoạt động mượn thiết bị</h3>
-            <p>Biểu đồ minh họa số lượt mượn trong 6 tháng</p>
+            <p>Số phiếu mượn và phiếu trả trong 6 tháng gần nhất</p>
           </div>
-          <span class="status green">+12.8%</span>
+          <span class="status green" id="chartTrend">—</span>
         </div>
 
-        <div class="chart">
-          <div class="bar-group">
-            <div class="bar h-38"></div>
-            <div class="bar alt h-16"></div>
-            <span class="bar-label">T5</span>
-          </div>
-          <div class="bar-group">
-            <div class="bar h-56"></div>
-            <div class="bar alt h-34"></div>
-            <span class="bar-label">T6</span>
-          </div>
-          <div class="bar-group">
-            <div class="bar h-45"></div>
-            <div class="bar alt h-23"></div>
-            <span class="bar-label">T7</span>
-          </div>
-          <div class="bar-group">
-            <div class="bar h-72"></div>
-            <div class="bar alt h-50"></div>
-            <span class="bar-label">T8</span>
-          </div>
-          <div class="bar-group">
-            <div class="bar h-61"></div>
-            <div class="bar alt h-39"></div>
-            <span class="bar-label">T9</span>
-          </div>
-          <div class="bar-group">
-            <div class="bar h-88"></div>
-            <div class="bar alt h-66"></div>
-            <span class="bar-label">T10</span>
-          </div>
-        </div>
+        <div class="chart" id="loanChart"></div>
 
         <div class="chart-legend">
-          <span><i class="legend-dot"></i>Lượt mượn</span>
-          <span><i class="legend-dot blue"></i>Lượt trả</span>
+          <span><i class="legend-dot"></i>Phiếu mượn</span>
+          <span><i class="legend-dot blue"></i>Phiếu trả</span>
         </div>
       </div>
 
@@ -182,6 +151,39 @@
         <div class="activity" id="activityList">
 
         </div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Thiết bị được mượn nhiều nhất</h3>
+            <p>Tính theo tổng số lượng đã mượn</p>
+          </div>
+        </div>
+        <div id="topDevices"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Người mượn nhiều nhất</h3>
+            <p>Tính theo số phiếu mượn</p>
+          </div>
+        </div>
+        <div id="topBorrowers"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Tỷ lệ phiếu</h3>
+            <p>Trên tổng <b id="totalLoans">0</b> phiếu</p>
+          </div>
+        </div>
+        <div class="rate-row"><span>Đã trả</span><strong id="returnRate">0%</strong></div>
+        <div class="rate-bar"><i id="returnBar"></i></div>
+        <div class="rate-row"><span>Quá hạn</span><strong id="overdueRate">0%</strong></div>
+        <div class="rate-bar red"><i id="overdueBar"></i></div>
       </div>
     </div>
 

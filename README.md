@@ -75,3 +75,21 @@ Nếu XAMPP của bạn đặt mật khẩu cho MySQL `root`, hãy sửa biến 
 - API `loan_create` kiểm tra `borrowerId` tồn tại trong MySQL và từ chối nếu không tồn tại; API không còn tự động thêm người mượn khi tạo phiếu.
 - Khi tạo phiếu, dữ liệu được ghi trong một transaction vào `PhieuMuon` và `ChiTietPhieu`, đồng thời ghi nhật ký vào `HoatDong`. Nếu một bước lỗi, transaction rollback để tránh phiếu thiếu chi tiết.
 - Nếu danh sách chọn trống, hãy vào trang **Người mượn** thêm hồ sơ trước rồi quay lại tạo phiếu.
+
+
+## Chức năng Phiếu mượn và Thống kê (cập nhật)
+
+**Phiếu mượn (`html/history.php`, `js/history.js`)**
+- Danh sách phiếu: tìm theo mã phiếu / người mượn / thiết bị; lọc theo trạng thái và theo khoảng **ngày mượn** (Từ ngày – Đến ngày).
+- **Chi tiết phiếu**: xem đầy đủ thông tin người mượn, ngày mượn – hẹn trả – ngày trả thực tế, danh sách thiết bị và số lượng.
+- **In phiếu**: nút "In phiếu" (`window.print()`) với bản in riêng có tiêu đề và ô ký tên.
+- **Xóa / hủy phiếu** (`loan_delete`): chạy trong transaction; phiếu chưa trả bị xóa thì thiết bị tự hoàn lại kho.
+
+**Thống kê trang chủ (`html/main.php`, `js/main.js`, hàm `load_stats()` trong `api/data.php`)**
+- Biểu đồ cột số phiếu mượn / phiếu trả trong 6 tháng gần nhất, so sánh với tháng trước (dữ liệu thật từ MySQL).
+- Top 5 thiết bị được mượn nhiều nhất, top 5 người mượn nhiều nhất.
+- Tỷ lệ phiếu đã trả và tỷ lệ phiếu quá hạn.
+
+**Bảo mật phía giao diện:** mọi dữ liệu người dùng chèn vào HTML đều đi qua `escapeHtml()` để chống XSS.
+
+Chi tiết các ca kiểm thử xem file `docs/KIEM_THU_VA_BAO_CAO.docx`.

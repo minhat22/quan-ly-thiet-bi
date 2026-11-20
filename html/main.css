@@ -1035,3 +1035,49 @@ td{
 .loan-borrower-hint a:hover {
     text-decoration: underline;
 }
+
+
+/* ===== Thong ke trang chu ===== */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:18px}
+.rank-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #edf3fa}
+.rank-item:last-child{border-bottom:0}
+.rank-no{width:26px;height:26px;border-radius:50%;background:#e5efff;color:#2677e8;font-weight:700;font-size:12px;display:grid;place-items:center;flex:none}
+.rank-info{display:flex;flex-direction:column;min-width:0}
+.rank-info strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-info small{color:#7488a0;font-size:11px}
+.rank-empty{color:#7488a0;font-size:13px}
+.rate-row{display:flex;justify-content:space-between;font-size:13px;margin:8px 0 6px}
+.rate-bar{height:8px;border-radius:99px;background:#edf3fa;overflow:hidden;margin-bottom:14px}
+.rate-bar i{display:block;height:100%;width:0;background:#1b8d70;border-radius:99px;transition:width .4s}
+.rate-bar.red i{background:#e5484d}
+.bar-label{white-space:nowrap}
+@media (max-width:900px){.stat-grid{grid-template-columns:1fr}}
+
+
+/* ===== Loc ngay, nut xoa, chi tiet + in phieu ===== */
+.date-filter{display:flex;align-items:center;gap:8px;font-size:12px;color:#7488a0}
+.date-filter input{padding:8px 10px}
+.action-btn.danger{color:#e5484d;border-color:#f3c5c7}
+.action-btn.danger:hover{background:#fdecec;border-color:#e5484d;color:#e5484d}
+.detail-modal{width:min(640px,100%);max-height:92vh;overflow:auto}
+.print-title{display:none;text-align:center;margin-bottom:14px}
+.print-title h2{margin:0 0 4px}
+.print-title p{margin:0}
+.detail-info{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;margin-bottom:16px}
+.detail-info div{display:flex;flex-direction:column;gap:2px}
+.detail-info span{font-size:11px;color:#7488a0}
+.detail-info strong{font-size:14px;color:#23466b}
+.detail-table{width:100%;border-collapse:collapse;margin-bottom:8px}
+.detail-table th,.detail-table td{border-bottom:1px solid #e1eaf5;padding:9px 8px;text-align:left;font-size:13px}
+.print-sign{display:none;justify-content:space-around;text-align:center;margin-top:50px}
+.print-sign div{display:flex;flex-direction:column;gap:4px;min-height:90px}
+.print-sign small{color:#555}
+
+@media print{
+    .app,.toast,#modalBackdrop,.no-print{display:none !important}
+    body{background:#fff !important}
+    #detailBackdrop{position:static !important;display:block !important;background:none !important;padding:0 !important}
+    #detailBackdrop .modal{box-shadow:none !important;border:0 !important;width:100% !important;max-height:none !important;overflow:visible !important;padding:0 !important}
+    .print-title{display:block}
+    .print-sign{display:flex}
+}

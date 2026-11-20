@@ -7,14 +7,14 @@ function deviceRows(rows) {
             <tr>
                 <td>
                     <div class="device-cell">
-                        <div class="device-pic">${device.icon || '▣'}</div>
+                        <div class="device-pic">${escapeHtml(device.icon || '▣')}</div>
                         <div>
-                            <b>${device.name}</b>
+                            <b>${escapeHtml(device.name)}</b>
                         </div>
                     </div>
                 </td>
                 <td>TB-${String(device.id).padStart(3, '0')}</td>
-                <td>${device.type}</td>
+                <td>${escapeHtml(device.type)}</td>
                 <td>${device.qty}</td>
                 <td>${borrowedCount(device.id)}</td>
                 <td>${Number(device.maintenance || 0)}</td>
