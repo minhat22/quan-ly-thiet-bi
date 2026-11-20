@@ -1,173 +1,17 @@
-// Du lieu mau ban dau: thiet bi, nguoi muon, phieu muon
-const seed = {
-    devices: [
-        {
-            id: 1,
-            name: 'Laptop Dell Latitude',
-            type: 'Máy tính',
-            status: 'Đang cho mượn',
-            qty: 12,
-            icon: '💻'
-        },
-        {
-            id: 2,
-            name: 'Máy chiếu Epson',
-            type: 'Thiết bị trình chiếu',
-            status: 'Sẵn sàng',
-            qty: 6,
-            icon: '📽️'
-        },
-        {
-            id: 3,
-            name: 'Bộ Arduino Uno',
-            type: 'Thiết bị thực hành',
-            status: 'Sẵn sàng',
-            qty: 20,
-            icon: '🔌'
-        },
-        {
-            id: 4,
-            name: 'Camera Canon',
-            type: 'Thiết bị ghi hình',
-            status: 'Bảo trì',
-            qty: 4,
-            icon: '📷'
-        },
-        {
-            id: 5,
-            name: 'Máy đo điện đa năng',
-            type: 'Dụng cụ đo',
-            status: 'Sẵn sàng',
-            qty: 10,
-            icon: '🔧'
-        }
-    ],
+// Dữ liệu được tải từ MySQL qua API; không còn dùng LocalStorage làm nguồn dữ liệu.
+let data = { devices: [], customer: [], loans: [], stockLog: [], activities: [] };
+let dataReady = false;
 
-    customer: [
-        {
-            id: 1,
-            name: 'Nguyễn Minh Anh',
-            unit: 'Khoa Công nghệ thông tin',
-            phone: '0901 234 567'
-        },
-        {
-            id: 2,
-            name: 'Trần Hoàng Nam',
-            unit: 'Phòng thí nghiệm A',
-            phone: '0912 345 678'
-        },
-        {
-            id: 3,
-            name: 'Lê Thảo Vy',
-            unit: 'Khoa Điện - Điện tử',
-            phone: '0987 654 321'
-        }
-    ],
-
-    loans: [
-        {
-            id: 1001,
-            borrower: 'Nguyễn Minh Anh',
-            device: 'Laptop Dell Latitude',
-            qty: 2,
-            borrowDate: '2026-10-27',
-            dueDate: '2026-11-02',
-            returnDate: '',
-            status: 'Đang mượn'
-        },
-        {
-            id: 1002,
-            borrower: 'Trần Hoàng Nam',
-            device: 'Máy chiếu Epson',
-            qty: 1,
-            borrowDate: '2026-10-25',
-            dueDate: '2026-10-29',
-            returnDate: '',
-            status: 'Quá hạn'
-        },
-        {
-            id: 1003,
-            borrower: 'Lê Thảo Vy',
-            device: 'Bộ Arduino Uno',
-            qty: 3,
-            borrowDate: '2026-10-20',
-            dueDate: '2026-10-26',
-            returnDate: '2026-10-26',
-            status: 'Đã trả'
-        }
-    ]
-};
-
-// Doc du lieu da luu; chua co thi dung du lieu mau
-let savedData = localStorage.getItem('gearflow_demo');
-
-let data;
-
-if (savedData !== null) {
-    data = JSON.parse(savedData);
-} else {
-    data = seed;
+async function reloadData() {
+    const remote = await api('../api/data.php');
+    data = remote;
+    data.devices = (data.devices || []).map(d => ({...d, id:Number(d.id), qty:Number(d.qty), maintenance:Number(d.maintenance || 0)}));
+    data.customer = (data.customer || []).map(b => ({...b, id:Number(b.id)}));
+    data.loans = (data.loans || []).map(l => ({...l, id:Number(l.id), items:(l.items || []).map(i => ({...i, deviceId:Number(i.deviceId), qty:Number(i.qty)}))}));
+    data.stockLog = data.stockLog || [];
+    data.activities = data.activities || [];
+    dataReady = true;
 }
-
-// Doi khoa cu 'borrowers' thanh 'customer'
-if (data.borrowers && !data.customer) {
-    data.customer = data.borrowers;
-    delete data.borrowers;
-}
-
-// Du lieu thiet bi cu: doi 'status' thanh so luong dang bao tri
-data.devices.forEach(function (device) {
-    if (device.maintenance === undefined) {
-        device.maintenance = device.status === 'Bảo trì' ? Number(device.qty) : 0;
-    }
-    delete device.status;
-});
-
-// Phieu muon cu (1 thiet bi): doi sang danh sach thiet bi 'items'
-data.loans.forEach(function (loan) {
-    if (!loan.items) {
-        // Trung ten thi lay thiet bi co ma nho nhat
-        let found = data.devices.filter(function (d) {
-            return d.name === loan.device;
-        }).sort(function (a, b) {
-            return a.id - b.id;
-        })[0];
-
-        loan.items = [{
-            deviceId: found ? found.id : null,
-            name: loan.device,
-            qty: Number(loan.qty)
-        }];
-
-        delete loan.device;
-        delete loan.qty;
-    }
-});
-
-// Tao lich su kho neu chua co
-if (!data.stockLog) {
-    data.stockLog = [];
-}
-
-// Tao nhat ky hoat dong neu chua co
-if (!data.activities) {
-    data.activities = [];
-    data.loans.forEach(function (loan) {
-        if (loan.status === 'Đã trả') {
-            data.activities.push({ type: 'return', borrower: loan.borrower, summary: loanSummary(loan), time: loan.returnDate });
-        }
-        data.activities.push({ type: 'create', borrower: loan.borrower, summary: loanSummary(loan), time: loan.borrowDate });
-    });
-}
-
-// Nhat ky cu (1 thiet bi): doi sang dang tom tat 'summary'
-data.activities.forEach(function (act) {
-    if (act.summary === undefined) {
-        act.summary = act.qty + ' ' + act.device;
-        delete act.device;
-        delete act.qty;
-    }
-});
 
 // Trang dang mo (lay tu data-page cua <body>)
 let currentPage = document.body.dataset.page;
@@ -183,10 +27,8 @@ function $(selector) {
     return document.querySelector(selector);
 }
 
-// Luu du lieu vao localStorage
-function save() {
-    localStorage.setItem('gearflow_demo', JSON.stringify(data));
-}
+// Lưu dữ liệu: API MySQL thực hiện việc ghi dữ liệu
+function save() { /* Dữ liệu được lưu trực tiếp vào MySQL thông qua API. */ }
 
 // Dinh dang so kieu Viet Nam
 function money(number) {
@@ -450,6 +292,7 @@ function fullLoanRows(rows) {
 
 // Ve lai trang: goi renderPage() cua trang roi to sang menu
 function render() {
+    if (!dataReady) return;
     if (typeof renderPage === 'function') {
         renderPage();
     }
@@ -495,9 +338,9 @@ const formFields = {
 
     // Form phieu muon
     loan: [
-        ['borrower', 'Người mượn', 'borrowerInput'],
-        ['phone', 'Số điện thoại', 'tel'],
-        ['unit', 'Đơn vị', 'select', unitList],
+        ['borrowerId', 'Người mượn', 'borrowerSelect'],
+        ['phone', 'Số điện thoại', 'readonly'],
+        ['unit', 'Đơn vị', 'readonly'],
         ['items', 'Thiết bị mượn', 'loanItems'],
         ['borrowDate', 'Ngày mượn', 'date'],
         ['dueDate', 'Ngày hẹn trả', 'date']
@@ -561,6 +404,29 @@ function openModal(type, item = null) {
             `;
         }
 
+        // Chi cho phep chon nguoi muon da ton tai trong MySQL
+        else if (kind === 'borrowerSelect') {
+            control = `
+                <select name="${key}" id="loanBorrowerSelect" onchange="fillBorrowerDetails(this.value)" required ${data.customer.length === 0 ? 'disabled' : ''}>
+                    <option value="">Chọn người mượn</option>
+                    ${data.customer.map(function (borrower) {
+                        return `<option value="${borrower.id}">${borrower.name} — ${borrower.unit} — ${borrower.phone}</option>`;
+                    }).join('')}
+                </select>
+                <small class="loan-borrower-hint">
+                    ${data.customer.length === 0
+                        ? 'Danh sách hiện chưa có người mượn. '
+                        : 'Chỉ được chọn người đã có trong danh sách Người mượn. Nếu không thấy tên, '}
+                    <a href="customers.php" target="_blank" rel="noopener">thêm người mượn tại đây</a>.
+                </small>
+            `;
+        }
+
+        // Thong tin nguoi muon tu dong dien, khong cho sua tai form phieu
+        else if (kind === 'readonly') {
+            control = `<input name="${key}" type="text" value="" readonly placeholder="Tự động lấy từ hồ sơ người mượn">`;
+        }
+
         // Danh sach chon nguoi muon
         else if (kind === 'selectBorrower') {
             control = `
@@ -577,26 +443,6 @@ function openModal(type, item = null) {
                     }).join('')}
 
                 </select>
-            `;
-        }
-
-        // O ten nguoi muon: go tu do + goi y ten co san
-        else if (kind === 'borrowerInput') {
-            control = `
-                <input
-                    name="${key}"
-                    list="borrowerList"
-                    value="${value}"
-                    placeholder="Nhập hoặc chọn tên"
-                    autocomplete="off"
-                    oninput="fillPhone(this.value)"
-                    required
-                >
-                <datalist id="borrowerList">
-                    ${data.customer.map(function (b) {
-                        return `<option value="${b.name}"></option>`;
-                    }).join('')}
-                </datalist>
             `;
         }
 
@@ -696,192 +542,86 @@ function closeModal() {
     $('#modalBackdrop').classList.remove('show');
 }
 
-// Chon nguoi da co thi tu dien so dien thoai
-function fillPhone(name) {
-    let found = data.customer.find(function (b) {
-        return b.name === name;
-    });
-
-    let phoneBox = document.querySelector('#modalFields input[name="phone"]');
-    let unitBox = document.querySelector('#modalFields select[name="unit"]');
-
-    if (found && phoneBox) {
-        phoneBox.value = found.phone;
-    }
-
-    if (found && unitBox) {
-        unitBox.value = found.unit;
-    }
+// Chon ma nguoi muon trong danh sach MySQL va tu dien thong tin tu ho so
+function fillBorrowerDetails(id) {
+    const found = data.customer.find(b => Number(b.id) === Number(id));
+    const phoneBox = document.querySelector('#modalFields input[name="phone"]');
+    const unitBox = document.querySelector('#modalFields input[name="unit"]');
+    if (phoneBox) phoneBox.value = found ? found.phone : '';
+    if (unitBox) unitBox.value = found ? found.unit : '';
 }
 
 // Bam "Luu thong tin": luu phieu / thiet bi / nguoi muon
-$('#modalForm').addEventListener('submit', function (event) {
+$('#modalForm').addEventListener('submit', async function (event) {
     event.preventDefault();
+    const formData = new FormData(event.target);
+    const obj = Object.fromEntries(formData.entries());
+    try {
+        if (modalType === 'stock') {
+            await api('../api/data.php','POST',{action:'stock',id:editing.id,operation:obj.action,amount:Number(obj.amount),note:obj.note || ''});
+        } else if (modalType === 'device') {
+            const isEditingDevice = modalType === 'device' && editing !== null;
+            await api('../api/data.php', 'POST', {
+                action: isEditingDevice ? 'device_update' : 'device_create',
+                id: isEditingDevice ? Number(editing.id) : undefined,
+                name: String(obj.name || '').trim(),
+                type: String(obj.type || '').trim(),
+                qty: Number(obj.qty),
+                icon: String(obj.icon || '▣').trim()
+            });
+        } else if (modalType === 'loan') {
+            const borrowerId = Number(obj.borrowerId || 0);
+            const borrowerExists = data.customer.some(person => Number(person.id) === borrowerId);
+            if (!borrowerExists) {
+                toast('Người này chưa có trong danh sách Người mượn. Hãy thêm hồ sơ ở trang Người mượn trước khi tạo phiếu.');
+                return;
+            }
+            const ids = formData.getAll('itemDevice');
+            const quantities = formData.getAll('itemQty');
+            const items = ids.map((id, i) => ({ deviceId: Number(id), qty: Number(quantities[i]) }));
 
-    // Lay du lieu nguoi dung vua nhap
-    let formData = new FormData(event.target);
+            // Kiem tra ton kho ngay tren giao dien de hien alert truoc khi gui yeu cau.
+            // Cong don cac dong neu nguoi dung chon cung mot thiet bi nhieu lan.
+            const requestedByDevice = new Map();
+            for (const item of items) {
+                if (!Number.isInteger(item.qty) || item.qty < 1) {
+                    alert('Vui lòng nhập số lượng thiết bị hợp lệ (ít nhất 1).');
+                    return;
+                }
+                requestedByDevice.set(item.deviceId, (requestedByDevice.get(item.deviceId) || 0) + item.qty);
+            }
 
-    let obj = Object.fromEntries(formData.entries());
+            for (const [deviceId, requestedQty] of requestedByDevice.entries()) {
+                const device = data.devices.find(d => Number(d.id) === Number(deviceId));
+                if (!device) {
+                    alert('Thiết bị được chọn không còn tồn tại. Vui lòng tải lại trang.');
+                    return;
+                }
+                const availableQty = readyCount(device);
+                if (requestedQty > availableQty) {
+                    alert(`Không đủ số lượng thiết bị trong kho!\n\nThiết bị: ${device.name}\nSố lượng còn sẵn: ${availableQty}\nSố lượng yêu cầu: ${requestedQty}`);
+                    return;
+                }
+            }
 
-    // Dieu chinh kho: xu ly rieng roi dung
-    if (modalType === 'stock') {
-        applyStock(editing, obj);
-        return;
-    }
-
-    // Doi so luong tu chu sang so
-    if (modalType === 'device') {
-        obj.qty = Number(obj.qty);
-    }
-
-    // Dang sua: cap nhat muc da co
-    if (editing !== null) {
-        let arr;
-
-        if (modalType === 'device') {
-            arr = data.devices;
+            // Server van kiem tra lai trong transaction de tranh truong hop ton kho thay doi dong thoi.
+            await api('../api/data.php','POST',{action:'loan_create',borrowerId,borrowDate:obj.borrowDate,dueDate:obj.dueDate,items});
         } else if (modalType === 'borrower') {
-            arr = data.customer;
+            await api('../api/borrowers.php','POST',{action:editing?'update':'create',id:editing?.id,hoTen:obj.name,donVi:obj.unit,sdt:obj.phone});
+        }
+        await reloadData(); closeModal(); render(); toast('Đã lưu thông tin vào MySQL');
+    } catch (error) {
+        // Khi số lượng yêu cầu vượt quá số lượng còn sẵn trong kho,
+        // hiển thị alert đơn giản để người dùng nhận biết ngay.
+        const message = String(error.message || 'Có lỗi xảy ra');
+        const normalizedMessage = message.toLocaleLowerCase('vi');
+        if (normalizedMessage.includes('không đủ') || normalizedMessage.includes('sẵn sàng không đủ')) {
+            alert('Không đủ số lượng thiết bị trong kho!\n\n' + message);
         } else {
-            arr = data.loans;
-        }
-
-        let item = arr.find(function (element) {
-            return element.id === editing.id;
-        });
-
-        Object.assign(item, obj);
-    }
-
-    // Tao phieu muon moi
-    else if (modalType === 'loan') {
-        // Gom cac dong thiet bi (chon trung thiet bi thi cong don so luong)
-        let deviceIds = formData.getAll('itemDevice');
-        let quantities = formData.getAll('itemQty');
-        let items = [];
-
-        if (deviceIds.length === 0) {
-            toast('Vui lòng chọn ít nhất 1 thiết bị còn sẵn sàng');
-            return;
-        }
-
-        deviceIds.forEach(function (idText, index) {
-            let id = Number(idText);
-            let qty = Math.floor(Number(quantities[index]));
-
-            let existing = items.find(function (item) {
-                return item.deviceId === id;
-            });
-
-            if (existing !== undefined) {
-                existing.qty += qty;
-            } else {
-                items.push({ deviceId: id, qty: qty });
-            }
-        });
-
-        if (items.some(function (item) { return !(item.qty >= 1); })) {
-            toast('Mỗi thiết bị phải có số lượng từ 1 trở lên');
-            return;
-        }
-
-        // Kiem tra tung thiet bi co du so luong san sang khong
-        for (let item of items) {
-            let device = data.devices.find(function (d) {
-                return d.id === item.deviceId;
-            });
-
-            if (device === undefined) {
-                toast('Vui lòng chọn thiết bị cho phiếu mượn');
-                return;
-            }
-
-            let ready = readyCount(device);
-
-            if (item.qty > ready) {
-                toast('Chỉ còn ' + ready + ' cái "' + device.name + '" sẵn sàng');
-                return;
-            }
-
-            item.name = device.name;
-        }
-
-        if (obj.dueDate < obj.borrowDate) {
-            toast('Ngày hẹn trả phải sau hoặc bằng ngày mượn');
-            return;
-        }
-
-        delete obj.itemDevice;
-        delete obj.itemQty;
-        obj.items = items;
-
-        // Tao ID moi cho phieu
-        obj.id = Math.max(
-            1000,
-            ...data.loans.map(function (loan) {
-                return loan.id;
-            })
-        ) + 1;
-
-        // Phieu moi: chua tra, trang thai Dang muon
-        obj.returnDate = '';
-
-        obj.status = 'Đang mượn';
-
-        // Ten nguoi muon chua co thi them vao danh sach nguoi muon
-        obj.borrower = obj.borrower.trim();
-
-        let known = data.customer.some(function (b) {
-            return b.name === obj.borrower;
-        });
-
-        if (!known) {
-            data.customer.unshift({
-                id: Math.max(0, ...data.customer.map(function (b) { return b.id; })) + 1,
-                name: obj.borrower,
-                unit: obj.unit,
-                phone: obj.phone
-            });
-        }
-
-        // Them phieu vao dau danh sach va ghi nhat ky
-        data.loans.unshift(obj);
-        addActivity('create', obj);
-    }
-
-    // Them thiet bi hoac nguoi muon moi
-    else {
-        let arr;
-
-        if (modalType === 'device') {
-            arr = data.devices;
-        } else {
-            arr = data.customer;
-        }
-
-        obj.id = Math.max(
-            0,
-            ...arr.map(function (item) {
-                return item.id;
-            })
-        ) + 1;
-
-        if (modalType === 'device') {
-            obj.maintenance = 0;
-            data.devices.unshift(obj);
-        } else {
-            data.customer.unshift(obj);
+            console.error('GearFlow: không thể lưu dữ liệu:', error);
+            toast(message);
         }
     }
-
-    // Luu, dong form, ve lai trang
-    save();
-
-    closeModal();
-
-    render();
-
-    toast('Đã lưu thông tin thành công');
 });
 
 // Mo form sua thiet bi / nguoi muon
@@ -895,7 +635,7 @@ function editItem(type, id) {
     }
 
     let item = arr.find(function (element) {
-        return element.id === id;
+        return Number(element.id) === Number(id);
     });
 
     if (item !== undefined) {
@@ -904,60 +644,17 @@ function editItem(type, id) {
 }
 
 // Xoa thiet bi / nguoi muon (co hoi xac nhan)
-function deleteItem(type, id) {
-    // Khong xoa thiet bi dang co phieu muon chua tra
-    if (type === 'device' && borrowedCount(id) > 0) {
-        toast('Thiết bị đang có người mượn, chưa thể xóa');
-        return;
-    }
-
-    let answer = confirm('Bạn có chắc muốn xóa mục này?');
-
-    if (answer === false) {
-        return;
-    }
-
-    let key;
-
-    if (type === 'device') {
-        key = 'devices';
-    } else {
-        key = 'customer';
-    }
-
-    data[key] = data[key].filter(function (item) {
-        return item.id !== id;
-    });
-
-    save();
-
-    render();
-
-    toast('Đã xóa dữ liệu');
+async function deleteItem(type, id) {
+    if (type !== 'device') { toast('Quản lý người mượn tại trang Người mượn'); return; }
+    if (!confirm('Bạn có chắc muốn xóa thiết bị này?')) return;
+    try { await api('../api/data.php','POST',{action:'device_delete',id}); await reloadData(); render(); toast('Đã xóa thiết bị'); }
+    catch(error) { toast(error.message); }
 }
 
 // Xac nhan da tra thiet bi
-function markReturned(id) {
-    let loan = data.loans.find(function (item) {
-        return item.id === id;
-    });
-
-    if (loan === undefined) {
-        return;
-    }
-
-    loan.status = 'Đã trả';
-
-    // Ghi ngay tra va ghi nhat ky
-    loan.returnDate = new Date().toISOString().slice(0, 10);
-
-    addActivity('return', loan);
-
-    save();
-
-    render();
-
-    toast('Đã xác nhận hoàn trả thiết bị');
+async function markReturned(id) {
+    try { await api('../api/data.php','POST',{action:'loan_return',id}); await reloadData(); render(); toast('Đã xác nhận hoàn trả thiết bị'); }
+    catch(error) { toast(error.message); }
 }
 
 // Hien ngay hien tai tren thanh tren cung
@@ -969,3 +666,6 @@ $('#today').textContent = new Intl.DateTimeFormat('vi-VN', {
     month: '2-digit',
     year: 'numeric'
 }).format(today);
+
+// Nạp dữ liệu tập trung từ MySQL khi trang khởi chạy.
+(async function startGearFlow(){ try { await reloadData(); render(); } catch(error) { toast(error.message); } })();

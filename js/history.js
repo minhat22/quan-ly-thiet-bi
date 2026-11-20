@@ -12,7 +12,7 @@ function filterRows() {
         let information = (
             String(loan.id) +
             loan.borrower +
-            loan.device
+            loanItemsText(loan)
         ).toLowerCase();
 
         return information.includes(search) &&

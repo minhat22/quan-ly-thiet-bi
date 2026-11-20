@@ -18,9 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     json_ok($stmt->fetchAll());
 }
 
-// ===== POST: sửa hoặc xóa =====
+// ===== POST: chỉ Admin được thêm, sửa hoặc xóa hồ sơ người mượn =====
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     json_error('Sai phương thức', 405);
+}
+if (($_SESSION['vai_tro'] ?? '') !== 'admin') {
+    json_error('Chỉ Admin mới có quyền quản lý hồ sơ người mượn', 403);
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
@@ -31,16 +34,22 @@ if (!is_array($input)) {
 $action = $input['action'] ?? '';
 $id = (int)($input['id'] ?? 0);
 
-if ($id <= 0) {
-    json_error('Thiếu mã người mượn');
+// Thêm người mượn mới (không cần tạo tài khoản đăng nhập)
+if ($action === 'create') {
+    $hoTen = trim($input['hoTen'] ?? '');
+    $donVi = trim($input['donVi'] ?? '');
+    $sdt = trim($input['sdt'] ?? '');
+    if ($hoTen === '' || $donVi === '' || !preg_match('/^[0-9 .+]{9,15}$/', $sdt)) {
+        json_error('Vui lòng nhập họ tên, đơn vị và số điện thoại hợp lệ');
+    }
+    $stmt = $pdo->prepare('INSERT INTO NguoiMuon(HoTen,DonVi,SDT) VALUES(?,?,?)');
+    $stmt->execute([$hoTen,$donVi,$sdt]);
+    json_ok(['id'=>(int)$pdo->lastInsertId()]);
 }
-
-// Kiểm tra người này có tồn tại không
+if ($id <= 0) json_error('Thiếu mã người mượn');
 $stmt = $pdo->prepare('SELECT COUNT(*) FROM NguoiMuon WHERE ID = ?');
 $stmt->execute([$id]);
-if ($stmt->fetchColumn() == 0) {
-    json_error('Không tìm thấy người mượn', 404);
-}
+if ($stmt->fetchColumn() == 0) json_error('Không tìm thấy người mượn', 404);
 
 //  SỬA 
 if ($action === 'update') {

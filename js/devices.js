@@ -16,7 +16,7 @@ function deviceRows(rows) {
                 <td>TB-${String(device.id).padStart(3, '0')}</td>
                 <td>${device.type}</td>
                 <td>${device.qty}</td>
-                <td>${borrowedCount(device.name)}</td>
+                <td>${borrowedCount(device.id)}</td>
                 <td>${Number(device.maintenance || 0)}</td>
                 <td>
                     <span class="status ${readyCount(device) > 0 ? 'green' : 'red'}">${readyCount(device)}</span>
@@ -50,7 +50,7 @@ function filterRows() {
         } else if (status === 'out') {
             match = readyCount(device) === 0;
         } else if (status === 'borrowed') {
-            match = borrowedCount(device.name) > 0;
+            match = borrowedCount(device.id) > 0;
         } else if (status === 'maintenance') {
             match = Number(device.maintenance || 0) > 0;
         }

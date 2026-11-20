@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Người mượn | GearFlow Blue</title>
+<link rel="icon" type="image/png" href="../images/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -76,6 +77,7 @@
         <h1>Quản lý người mượn</h1>
         <p>Lưu trữ thông tin cá nhân và đơn vị công tác.</p>
       </div>
+      <button class="btn btn-primary" type="button" onclick="themNguoiMuon()">＋ Thêm người mượn</button>
     </div>
 
     <div class="panel">
@@ -120,7 +122,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="../js/api.js"></script>
-<script src="../js/core.js"></script>
+<script src="../js/core.js?v=20261120-preserve-device-select-3"></script>
 <script src="../js/customers.js"></script>
 </body>
 </html>

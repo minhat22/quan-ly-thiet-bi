@@ -49,3 +49,29 @@ password_verify: so mật khẩu với bản mã hóa, không lưu mật khẩu 
 session_regenerate_id(true): đổi mã phiên sau khi đăng nhập.
 Sai tên hay sai mật khẩu đều báo cùng một câu, để người lạ không dò được tên nào tồn tại.
 Sai đăng nhập trả mã 400, còn mã 401 để dành cho “chưa đăng nhập” (khác nhau để api() biết khi nào cần chuyển về trang đăng nhập). -->
+## Bản cập nhật MySQL tập trung (GearFlow)
+
+- Dữ liệu thiết bị, người mượn, phiếu mượn, chi tiết phiếu, lịch sử kho và hoạt động được đọc/ghi qua PHP API vào MySQL; JavaScript không còn dùng `localStorage` làm nguồn dữ liệu.
+- Đăng nhập dùng bảng `NguoiDung` và `password_verify()`. Tài khoản mặc định: `admin`; mật khẩu: `Gearflowct428`.
+- Người mượn là hồ sơ độc lập, không cần tài khoản đăng nhập. Người dùng đã đăng nhập có thể thêm hồ sơ tại trang **Người mượn**; API lưu vào bảng `NguoiMuon`.
+- Các thao tác mượn, trả và điều chỉnh kho chạy trong transaction, kiểm tra số lượng khả dụng phía máy chủ.
+
+### Cài đặt / cập nhật
+
+1. Chép thư mục dự án vào `C:\\xampp\\htdocs\\quan-ly-thiet-bi`.
+2. Bật Apache và MySQL trong XAMPP.
+3. Mở phpMyAdmin, import `gearflow.sql` để tạo mới CSDL `gearflow`.
+4. Nếu đã có CSDL GearFlow cũ, chạy thêm `fix_admin.sql` trong phpMyAdmin để cập nhật hash mật khẩu Admin.
+5. Kiểm tra `config/db.php`: mặc định XAMPP là host `localhost`, database `gearflow`, user `root`, mật khẩu rỗng.
+6. Mở `http://localhost/quan-ly-thiet-bi/html/login.php`.
+
+Nếu XAMPP của bạn đặt mật khẩu cho MySQL `root`, hãy sửa biến `$password` trong `config/db.php`.
+
+
+### Ràng buộc người mượn khi tạo phiếu (bản cập nhật)
+
+- Form Phiếu mượn chỉ hiển thị người mượn đã có trong bảng `NguoiMuon`; chọn theo mã hồ sơ, kèm họ tên, đơn vị và số điện thoại.
+- Đơn vị và số điện thoại được tự động lấy từ hồ sơ, không nhập tự do trong form phiếu.
+- API `loan_create` kiểm tra `borrowerId` tồn tại trong MySQL và từ chối nếu không tồn tại; API không còn tự động thêm người mượn khi tạo phiếu.
+- Khi tạo phiếu, dữ liệu được ghi trong một transaction vào `PhieuMuon` và `ChiTietPhieu`, đồng thời ghi nhật ký vào `HoatDong`. Nếu một bước lỗi, transaction rollback để tránh phiếu thiếu chi tiết.
+- Nếu danh sách chọn trống, hãy vào trang **Người mượn** thêm hồ sơ trước rồi quay lại tạo phiếu.

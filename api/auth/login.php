@@ -13,7 +13,7 @@ if ($tenDangNhap === '' || $matKhau === '') {
 }
 
 // PDO dùng prepared statement chặn tấn công SQL Injection
-$stmt = $pdo->prepare('SELECT * FROM TaiKhoan WHERE TenDangNhap = ?');
+$stmt = $pdo->prepare('SELECT * FROM NguoiDung WHERE TenDangNhap = ?');
 $stmt->execute([$tenDangNhap]);
 $user = $stmt->fetch();
 

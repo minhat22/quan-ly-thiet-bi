@@ -104,6 +104,17 @@ function suaNguoiMuon(id) {
     document.getElementById('modalBackdrop').classList.add('show');
 }
 
+// Admin/nhân viên đã đăng nhập có thể thêm người mượn; người mượn không cần tài khoản đăng nhập.
+function themNguoiMuon() {
+    dangSua = null;
+    document.getElementById('modalTitle').textContent = 'Thêm người mượn';
+    document.getElementById('modalFields').innerHTML = `
+      <div class="form-group"><label>Họ và tên</label><input name="hoTen" required maxlength="100"></div>
+      <div class="form-group"><label>Số điện thoại</label><input name="sdt" type="tel" pattern="[0-9 .+]{9,15}" required></div>
+      <div class="form-group full"><label>Đơn vị</label><input name="donVi" required maxlength="150"></div>`;
+    document.getElementById('modalBackdrop').classList.add('show');
+}
+
 // Xóa người mượn (server sẽ chặn nếu người này có phiếu mượn)
 async function xoaNguoiMuon(id) {
     if (!confirm('Bạn có chắc muốn xóa người mượn này?')) {
@@ -132,7 +143,7 @@ form.addEventListener('submit', async function (e) {
 
     try {
         await api('../api/borrowers.php', 'POST', {
-            action: 'update',
+            action: dangSua === null ? 'create' : 'update',
             id: dangSua,
             hoTen: du.hoTen,
             donVi: du.donVi,
@@ -140,7 +151,8 @@ form.addEventListener('submit', async function (e) {
         });
 
         closeModal();
-        toast('Đã cập nhật người mượn');
+        toast(dangSua === null ? 'Đã thêm người mượn' : 'Đã cập nhật người mượn');
+        dangSua = null;
         taiDanhSach();
     } catch (loi) {
         toast(loi.message);

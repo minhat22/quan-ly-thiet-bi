@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thiết bị | GearFlow Blue</title>
+<link rel="icon" type="image/png" href="../images/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -160,9 +161,9 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="../js/api.js"></script>
-<script src="../js/core.js"></script>
-<script src="../js/devices.js"></script>
+<script src="../js/api.js?v=20261120-device-save-2"></script>
+<script src="../js/core.js?v=20261120-preserve-device-select-3?v=20261120-preserve-device-select-3"></script>
+<script src="../js/devices.js?v=20261120-device-save-2"></script>
 
 </body>
 </html>

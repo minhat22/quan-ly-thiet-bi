@@ -1,16 +1,7 @@
-:root{
-  --bg:#0b1018;--panel:#121b27;
-  --panel2:#172332;--line:#253447;
-  --text:#edf4fb;--muted:#91a2b7;
-  --green:#42e0a1;--green2:#1a9d75;
-  --blue:#58a6ff;--yellow:#f6c768;
-  --red:#ff6b78;--purple:#b79aff;
-  --radius:17px;--shadow:0 16px 40px rgba(0,0,0,.22)
-}
 *{box-sizing:border-box}
 body{
     margin:0;
-    background:radial-gradient(circle at 80% -10%,#1a3440 0,transparent 30%),var(--bg);color:var(--text);
+    background:radial-gradient(circle at 80% -10%,#1a3440 0,transparent 30%),rgb(243, 247, 252);color:rgb(23, 47, 77);
     font-family:'Be Vietnam Pro',sans-serif;
     font-size:14px}
 button,input,select{
@@ -62,7 +53,7 @@ color: rgb(155, 101, 101);
 .sidebar{
     width:248px;
     background:#0d1520;
-    border-right:1px solid var(--line);
+    border-right:1px solid rgb(220, 231, 244);
     padding:25px 16px;position:fixed;
     inset:0 auto 0 0;display:flex;
     flex-direction:column;
@@ -87,7 +78,7 @@ color: rgb(155, 101, 101);
 
 .brand small{
     display:block;
-    color:var(--muted);
+    color:rgb(113, 132, 156);
     font-size:10px;
     margin-top:2px;
     letter-spacing:1.4px
@@ -122,8 +113,8 @@ color: rgb(155, 101, 101);
 }
 .nav a.active{
     background:linear-gradient(100deg,#1b493e,#17352f);
-    color:var(--green);
-    box-shadow:inset 3px 0 var(--green)
+    color:rgb(38, 119, 232);
+    box-shadow:inset 3px 0 rgb(38, 119, 232)
 }
 .nav .ico{
     width:16px;
@@ -142,9 +133,9 @@ color: rgb(155, 101, 101);
 .dot{
     width:7px;
     height:7px;
-    background:var(--green);
+    background:rgb(38, 119, 232);
     border-radius:50%;
-    box-shadow:0 0 10px var(--green)
+    box-shadow:0 0 10px rgb(38, 119, 232)
 }
 
 .main{
@@ -161,11 +152,11 @@ color: rgb(155, 101, 101);
     gap:16px
 }
 .crumb{
-    color:var(--muted);
+    color:rgb(113, 132, 156);
     font-size:12px
 }
 .crumb b{
-    color:var(--text);
+    color:rgb(23, 47, 77);
     font-weight:600
 }
 .top-right{
@@ -174,7 +165,7 @@ color: rgb(155, 101, 101);
     gap:12px
 }
 .date-chip,.user-chip{
-    border:1px solid var(--line);
+    border:1px solid rgb(220, 231, 244);
     background:#111b27;border-radius:12px;
     padding:9px 13px;
     color:#b9c8d8;
@@ -190,7 +181,7 @@ color: rgb(155, 101, 101);
     height:28px;
     border-radius:9px;
     background:#254c48;
-    color:var(--green);
+    color:rgb(38, 119, 232);
     display:flex;
     align-items:center;
     justify-content:center;
@@ -204,7 +195,7 @@ color: rgb(155, 101, 101);
     gap:15px
 }
 .eyebrow{
-    color:var(--green);
+    color:rgb(38, 119, 232);
     font-size:10px;
     letter-spacing:1.8px;
     font-weight:700;
@@ -223,7 +214,7 @@ color: rgb(155, 101, 101);
 }
 .page-head p{
     margin:0;
-    color:var(--muted);
+    color:rgb(113, 132, 156);
     font-size:12px
 }
 .btn{
@@ -237,7 +228,7 @@ color: rgb(155, 101, 101);
     gap:8px
 }
 .btn-primary{
-    background:var(--green);
+    background:rgb(38, 119, 232);
     color:#06150f;
     box-shadow:0 7px 20px #42e0a122
 }
@@ -247,7 +238,7 @@ color: rgb(155, 101, 101);
 .btn-ghost{
     background:#1a2939;
     color:#d7e4f1;
-    border:1px solid var(--line)
+    border:1px solid rgb(220, 231, 244)
 }
 .btn-ghost:hover {
     color:rgb(154, 65, 65);
@@ -267,7 +258,7 @@ color: rgb(155, 101, 101);
 }
 .stat{
     background:linear-gradient(145deg,#152231,#111a26);
-    border:1px solid var(--line);border-radius:var(--radius);
+    border:1px solid rgb(220, 231, 244);border-radius:17px;
     padding:18px 19px;
     position:relative;
     overflow:hidden
@@ -280,13 +271,13 @@ color: rgb(155, 101, 101);
     border-radius:50%;
     right:-38px;
     top:-42px;
-    background:var(--glow,#42e0a1);
+    background:rgb(38, 119, 232);
     opacity:.08;filter:blur(3px)
 }
 .stat-top{
     display:flex;
     justify-content:space-between;
-    color:var(--muted);
+    color:rgb(113, 132, 156);
     font-size:11px
 }
 .stat-icon{
@@ -306,11 +297,11 @@ color: rgb(155, 101, 101);
     letter-spacing:-1px
 }
 .stat small{
-    color:var(--muted);
+    color:rgb(113, 132, 156);
     font-size:10px
 }
 .up{
-    color:var(--green)!important
+    color:rgb(38, 119, 232)!important
 }
 .grid-main{
     display:flex;
@@ -325,10 +316,10 @@ color: rgb(155, 101, 101);
     min-width:260px
 }
 .panel{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:var(--radius);
-    padding:19px;box-shadow:var(--shadow);
+    background:rgb(255, 255, 255);
+    border:1px solid rgb(220, 231, 244);
+    border-radius:17px;
+    padding:19px;box-shadow:0 12px 30px rgba(31, 76, 130, 0.075);
     min-width:0
 }
 .panel-head{
@@ -344,13 +335,13 @@ color: rgb(155, 101, 101);
 }
 .panel-head p{
     margin:5px 0 0;
-    color:var(--muted);
+    color:rgb(113, 132, 156);
     font-size:10px
 }
 .text-link{
     background:none;
     border:0;
-    color:var(--green);
+    color:rgb(38, 119, 232);
     font-size:11px;
     font-weight:600
 }
@@ -360,7 +351,7 @@ color: rgb(155, 101, 101);
     align-items:flex-end;
     gap:15px;
     padding:12px 4px 0;
-    border-bottom:1px solid var(--line);
+    border-bottom:1px solid rgb(220, 231, 244);
     background:repeating-linear-gradient(to bottom,transparent 0,transparent 49px,#233142 50px)
 }
 .bar-group{
@@ -374,7 +365,7 @@ color: rgb(155, 101, 101);
 .bar{
     width:13px;
     border-radius:5px 5px 2px 2px;
-    background:linear-gradient(180deg,var(--green),#1b8d70);
+    background:linear-gradient(180deg,rgb(38, 119, 232),#1b8d70);
     min-height:4px
 }
 .bar.alt{
@@ -390,7 +381,7 @@ color: rgb(155, 101, 101);
     display:flex;
     gap:17px;
     margin-top:30px;
-    color:var(--muted);
+    color:rgb(113, 132, 156);
     font-size:10px
 }
 .legend-dot{
@@ -399,10 +390,10 @@ color: rgb(155, 101, 101);
     height:7px;
     border-radius:50%;
     margin-right:6px;
-    background:var(--green)
+    background:rgb(38, 119, 232)
 }
 .legend-dot.blue{
-    background:var(--blue)
+    background:rgb(38, 119, 232)
 }
 .activity{
     display:flex;
@@ -433,7 +424,7 @@ color: rgb(155, 101, 101);
 }
 .activity-item p{
     font-size:10px;
-    color:var(--muted);
+    color:rgb(113, 132, 156);
     margin:4px 0 0
 }
 .activity-item time{
@@ -470,7 +461,7 @@ th{
     font-weight:700;
     letter-spacing:1px;
     padding:10px 9px;
-    border-bottom:1px solid var(--line)
+    border-bottom:1px solid rgb(220, 231, 244)
 }
 td{
     padding:13px 9px;
@@ -501,7 +492,7 @@ tbody tr:last-child td{
 }
 .device-cell small{
     display:block;
-    color:var(--muted);
+    color:rgb(113, 132, 156);
     font-size:9px;
     margin-top:3px
 }
@@ -537,7 +528,7 @@ tbody tr:last-child td{
     flex:0 0 calc(50% - 5px)
 }
 .quick{
-    border:1px solid var(--line);
+    border:1px solid rgb(220, 231, 244);
     border-radius:12px;
     padding:13px;
     background:#142130;
@@ -558,7 +549,7 @@ tbody tr:last-child td{
 }
 .quick small{
     display:block;
-    color:var(--muted);
+    color:rgb(113, 132, 156);
     font-size:9px;
     margin-top:4px
 }
@@ -587,21 +578,21 @@ tbody tr:last-child td{
 }
 .field,input,select{
     background:#0f1925;
-    border:1px solid var(--line);
-    color:var(--text);
+    border:1px solid rgb(220, 231, 244);
+    color:rgb(23, 47, 77);
     border-radius:9px;
     padding:10px 11px;
     outline:none
 }
 .field:focus,input:focus,select:focus{
-    border-color:var(--green);
+    border-color:rgb(38, 119, 232);
     box-shadow:0 0 0 3px #42e0a11a
 }
 .toolbar select{
     min-width:145px
 }
 .action-btn{
-    border:1px solid var(--line);
+    border:1px solid rgb(220, 231, 244);
     background:#1a2938;
     color:#bcd0e0;
     border-radius:8px;
@@ -610,8 +601,8 @@ tbody tr:last-child td{
     margin-right:4px
 }
 .action-btn:hover{
-    border-color:var(--green);
-    color:var(--green)
+    border-color:rgb(38, 119, 232);
+    color:rgb(38, 119, 232)
 }
 .form-grid{
     display:flex;
@@ -680,7 +671,7 @@ tbody tr:last-child td{
 .empty{
     text-align:center;
     padding:35px;
-    color:var(--muted)
+    color:rgb(113, 132, 156)
 }
 .empty div{
     font-size:30px;
@@ -777,23 +768,8 @@ tbody tr:last-child td{
 }
 
 /* BLUE THEME OVERRIDES */
-:root{
- --bg:#f3f7fc;
- --panel:#ffffff;
- --panel2:#edf4fc;
- --line:#dce7f4;
- --text:#172f4d;
- --muted:#71849c;
- --green:#2677e8;
- --green2:#185fc0;
- --blue:#2677e8;
- --yellow:#e6a23c;
- --red:#e45c68;
- --purple:#8a76d6;
- --shadow:0 12px 30px rgba(31,76,130,.075)
-}
 body{
-    background:radial-gradient(circle at 85% -10%,#e0edff 0,transparent 34%),var(--bg);color:var(--text)
+    background:radial-gradient(circle at 85% -10%,#e0edff 0,transparent 34%),rgb(243, 247, 252);color:rgb(23, 47, 77)
 }
 .sidebar{
     background:#102d50;
@@ -834,7 +810,7 @@ body{
     color:#294b70
 }
 .date-chip,.user-chip{
-    border-color:var(--line);
+    border-color:rgb(220, 231, 244);
     background:#fff;
     color:#59718e
 }
@@ -848,7 +824,7 @@ body{
 
 .stat{
     background:linear-gradient(145deg,#fff,#f7faff);
-    border-color:var(--line)
+    border-color:rgb(220, 231, 244)
 }
 .stat-top{
     color:#71849c
@@ -862,8 +838,8 @@ body{
 }
 .panel{
     background:#fff;
-    border-color:var(--line);
-    box-shadow:var(--shadow)
+    border-color:rgb(220, 231, 244);
+    box-shadow:0 12px 30px rgba(31, 76, 130, 0.075)
 }
 .chart{
     border-bottom-color:#e1eaf5;
@@ -1027,11 +1003,9 @@ td{
 
 /* ===== Chuyển từ style inline trong HTML ===== */
 .crumb .sep{color:#53677d}
-.text-green{color:var(--green)}
+.text-green{color:rgb(38, 119, 232)}
 .panel.panel-gap{margin-top:18px}
-.stat.stat-green{--glow:var(--green)}
-.stat.stat-blue{--glow:var(--blue)}
-.stat.stat-red{--glow:var(--red)}
+.stat.stat-red:after{background:rgb(228, 92, 104)}
 .bar.h-16{height:16%}
 .bar.h-23{height:23%}
 .bar.h-34{height:34%}
@@ -1044,3 +1018,20 @@ td{
 .bar.h-66{height:66%}
 .bar.h-72{height:72%}
 .bar.h-88{height:88%}
+
+/* Huong dan chon nguoi muon trong form tao phieu */
+.loan-borrower-hint {
+    display: block;
+    margin-top: 7px;
+    line-height: 1.5;
+    color: #7187a2;
+    font-size: 12px;
+}
+.loan-borrower-hint a {
+    color: #2475e8;
+    font-weight: 600;
+    text-decoration: none;
+}
+.loan-borrower-hint a:hover {
+    text-decoration: underline;
+}
