@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="main.css?v=20261120-clean-8">
 
 </head>
 <body data-page="trangchu">
@@ -21,7 +21,7 @@
     </div>
     <div>
       <span class="title-name">GearFlow</span>
-      <small>EQUIPMENT MANAGER</small>
+      <p class="txt-small">EQUIPMENT MANAGER</p>
     </div>
   </div>
   <div class="nav-label">TỔNG QUAN</div>
@@ -72,7 +72,7 @@
       <div class="user-chip">
         <div class="avatar">AD</div>
         <span><?= htmlspecialchars($_SESSION['ho_ten']) ?></span>
-        <a href="#" onclick="dangXuat(); return false;" style="margin-left:10px;font-size:12px;text-decoration:none">Đăng xuất</a>
+        <button type="button" class="btn btn-primary btn-logout" onclick="dangXuat()">Đăng xuất</button>
       </div>
   </div>
 </div>
@@ -81,7 +81,7 @@
       <div class="parent">
         <div class="eyebrow">Trang chủ / 01</div>
         <h1>Tổng quan hệ thống</h1>
-        <p>Theo dõi nhanh tình hình thiết bị và hoạt động mượn – trả.</p>
+        <p>Theo dõi nhanh tình hình thiết bị và hoạt động mượn - trả.</p>
       </div>
     </div>
 
@@ -91,36 +91,36 @@
           <span>Tổng số thiết bị</span>
            <img class="stat-icon" src="../images/main-TSThietBi.png" alt="">
         </div>
-        <strong id="statTotal">0</strong>
-        <small>Trong kho và đang lưu hành</small>
+        <p class="txt-strong" id="statTotal">0</p>
+        <p class="txt-small">Trong kho và đang lưu hành</p>
       </div>
       <div class="stat stat-blue">
         <div class="stat-top">
           <span>Phiếu đang mượn</span>
           <img class="stat-icon" src="../images/main-PhieuDgMuon.png" alt="">
         </div>
-        <strong id="statActive">0</strong>
-        <small>Cần theo dõi lịch trả</small>
+        <p class="txt-strong" id="statActive">0</p>
+        <p class="txt-small">Cần theo dõi lịch trả</p>
       </div>
       <div class="stat stat-green">
         <div class="stat-top">
           <span>Thiết bị sẵn sàng</span>
           <img class="stat-icon" src="../images/main-TBSanSang.png" alt="">
         </div>
-        <strong id="statReady">0</strong>
-        <small>Có thể đăng ký mượn</small>
+        <p class="txt-strong" id="statReady">0</p>
+        <p class="txt-small">Có thể đăng ký mượn</p>
       </div>
       <div class="stat stat-red">
         <div class="stat-top">
           <span>Phiếu quá hạn</span>
           <img class="stat-icon" src="../images/main-PhieuQuaHan.png" alt="">
         </div>
-        <strong id="statOverdue">0</strong>
-        <small>Cần xử lý ngay</small>
+        <p class="txt-strong" id="statOverdue">0</p>
+        <p class="txt-small">Cần xử lý ngay</p>
       </div>
     </div>
 
-    <div class="grid-main">
+    <div class="flex-main">
 
       <div class="panel">
         <div class="panel-head">
@@ -145,7 +145,7 @@
             <h3>Hoạt động gần đây</h3>
             <p>Cập nhật trong hệ thống</p>
           </div>
-          <span class="text-green">•••</span>
+          
         </div>
 
         <div class="activity" id="activityList">
@@ -154,7 +154,7 @@
       </div>
     </div>
 
-    <div class="stat-grid">
+    <div class="stat-flex">
       <div class="panel">
         <div class="panel-head">
           <div>
@@ -180,14 +180,14 @@
             <p>Trên tổng <b id="totalLoans">0</b> phiếu</p>
           </div>
         </div>
-        <div class="rate-row"><span>Đã trả</span><strong id="returnRate">0%</strong></div>
+        <div class="rate-row"><span>Đã trả</span><p class="txt-strong" id="returnRate">0%</p></div>
         <div class="rate-bar"><i id="returnBar"></i></div>
-        <div class="rate-row"><span>Quá hạn</span><strong id="overdueRate">0%</strong></div>
+        <div class="rate-row"><span>Quá hạn</span><p class="txt-strong" id="overdueRate">0%</p></div>
         <div class="rate-bar red"><i id="overdueBar"></i></div>
       </div>
     </div>
 
-    <div class="lower-grid">
+    <div class="lower-flex">
       <div class="panel">
         <div class="panel-head">
           <div>
@@ -222,7 +222,7 @@
       <button class="close" onclick="closeModal()"><span class="close-button">x</span></button>
     </div>
     <form id="modalForm">
-      <div id="modalFields" class="form-grid"></div>
+      <div id="modalFields" class="form-flex"></div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Hủy</button>
         <button class="btn btn-primary" type="submit">Lưu thông tin</button>
@@ -233,7 +233,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="../js/api.js"></script>
-<script src="../js/core.js?v=20261120-preserve-device-select-3"></script>
+<script src="../js/core.js?v=20261120-clean-8"></script>
 <script src="../js/main.js"></script>
 </body>
 </html>

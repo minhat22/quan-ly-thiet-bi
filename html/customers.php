@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="main.css?v=20261120-clean-8">
 
 </head>
 <body data-page="customers">
@@ -17,7 +17,7 @@
 <aside class="sidebar">
   <div class="brand">
     <div><img class="logo-img" src="../images/logo.png" alt=""></div><div>
-      <span class="title-name">GearFlow</span><small>EQUIPMENT MANAGER</small>
+      <span class="title-name">GearFlow</span><p class="txt-small">EQUIPMENT MANAGER</p>
     </div>
   </div>
   <div class="nav-label">TỔNG QUAN</div>
@@ -65,7 +65,7 @@
       <div class="user-chip">
         <div class="avatar">AD</div>
         <span><?= htmlspecialchars($_SESSION['ho_ten']) ?></span>
-        <a href="#" onclick="dangXuat(); return false;" style="margin-left:10px;font-size:12px;text-decoration:none">Đăng xuất</a>
+        <button type="button" class="btn btn-primary btn-logout" onclick="dangXuat()">Đăng xuất</button>
         
       </div>
     </div>
@@ -111,7 +111,7 @@
       <button class="close" onclick="closeModal()"><span class="close-button">x</span></button>
     </div>
     <form id="modalForm">
-      <div id="modalFields" class="form-grid"></div>
+      <div id="modalFields" class="form-flex"></div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Hủy</button>
         <button class="btn btn-primary" type="submit">Lưu thông tin</button>
@@ -122,7 +122,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="../js/api.js"></script>
-<script src="../js/core.js?v=20261120-preserve-device-select-3"></script>
+<script src="../js/core.js?v=20261120-clean-8"></script>
 <script src="../js/customers.js"></script>
 </body>
 </html>

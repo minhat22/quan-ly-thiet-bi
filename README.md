@@ -23,7 +23,7 @@ Hệ thống bao gồm 4 bảng thực thể chính:
 1. **`ThietBi`** (`ID`, `TenThietBi`, `Loai`, `TinhTrang`, `SoLuong`): Lưu trữ danh mục và số lượng tồn kho của thiết bị.
 2. **`NguoiMuon`** (`ID`, `HoTen`, `DonVi`, `SDT`): Quản lý thông tin người đăng ký mượn.
 3. **`PhieuMuon`** (`ID`, `ID_NguoiMuon`, `NgayMuon`, `NgayHenTra`, `NgayTra`, `TrangThai`): Lưu thông tin tổng quát của mỗi lượt mượn.
-4. **`ChiTietMuon`** (`ID_PhieuMuon`, `ID_ThietBi`, `SoLuong`): Lưu chi tiết từng thiết bị và số lượng tương ứng trong mỗi phiếu mượn.
+4. **`ChiTietPhieu`** (`ID_Phieu`, `ID_ThietBi`, `SoLuong`): Lưu chi tiết từng thiết bị và số lượng tương ứng trong mỗi phiếu mượn.
 
 ## Chức năng chính
 
@@ -51,7 +51,7 @@ Sai tên hay sai mật khẩu đều báo cùng một câu, để người lạ 
 Sai đăng nhập trả mã 400, còn mã 401 để dành cho “chưa đăng nhập” (khác nhau để api() biết khi nào cần chuyển về trang đăng nhập). -->
 ## Bản cập nhật MySQL tập trung (GearFlow)
 
-- Dữ liệu thiết bị, người mượn, phiếu mượn, chi tiết phiếu, lịch sử kho và hoạt động được đọc/ghi qua PHP API vào MySQL; JavaScript không còn dùng `localStorage` làm nguồn dữ liệu.
+- Dữ liệu thiết bị, người mượn, phiếu mượn, chi tiết phiếu và lịch sử kho được đọc/ghi qua PHP API vào MySQL; JavaScript không còn dùng `localStorage` làm nguồn dữ liệu.
 - Đăng nhập dùng bảng `NguoiDung` và `password_verify()`. Tài khoản mặc định: `admin`; mật khẩu: `Gearflowct428`.
 - Người mượn là hồ sơ độc lập, không cần tài khoản đăng nhập. Người dùng đã đăng nhập có thể thêm hồ sơ tại trang **Người mượn**; API lưu vào bảng `NguoiMuon`.
 - Các thao tác mượn, trả và điều chỉnh kho chạy trong transaction, kiểm tra số lượng khả dụng phía máy chủ.
@@ -61,7 +61,7 @@ Sai đăng nhập trả mã 400, còn mã 401 để dành cho “chưa đăng nh
 1. Chép thư mục dự án vào `C:\\xampp\\htdocs\\quan-ly-thiet-bi`.
 2. Bật Apache và MySQL trong XAMPP.
 3. Mở phpMyAdmin, import `gearflow.sql` để tạo mới CSDL `gearflow`.
-4. Nếu đã có CSDL GearFlow cũ, chạy thêm `fix_admin.sql` trong phpMyAdmin để cập nhật hash mật khẩu Admin.
+4. Nếu đã có CSDL GearFlow cũ, chạy `migrate_remove_icon_hoatdong.sql` để bỏ cột `Icon` và bảng `HoatDong` (tài khoản admin đã nằm sẵn trong `gearflow.sql`).
 5. Kiểm tra `config/db.php`: mặc định XAMPP là host `localhost`, database `gearflow`, user `root`, mật khẩu rỗng.
 6. Mở `http://localhost/quan-ly-thiet-bi/html/login.php`.
 
@@ -73,7 +73,7 @@ Nếu XAMPP của bạn đặt mật khẩu cho MySQL `root`, hãy sửa biến 
 - Form Phiếu mượn chỉ hiển thị người mượn đã có trong bảng `NguoiMuon`; chọn theo mã hồ sơ, kèm họ tên, đơn vị và số điện thoại.
 - Đơn vị và số điện thoại được tự động lấy từ hồ sơ, không nhập tự do trong form phiếu.
 - API `loan_create` kiểm tra `borrowerId` tồn tại trong MySQL và từ chối nếu không tồn tại; API không còn tự động thêm người mượn khi tạo phiếu.
-- Khi tạo phiếu, dữ liệu được ghi trong một transaction vào `PhieuMuon` và `ChiTietPhieu`, đồng thời ghi nhật ký vào `HoatDong`. Nếu một bước lỗi, transaction rollback để tránh phiếu thiếu chi tiết.
+- Khi tạo phiếu, dữ liệu được ghi trong một transaction vào `PhieuMuon` và `ChiTietPhieu`. Nếu một bước lỗi, transaction rollback để tránh phiếu thiếu chi tiết.
 - Nếu danh sách chọn trống, hãy vào trang **Người mượn** thêm hồ sơ trước rồi quay lại tạo phiếu.
 
 
@@ -82,7 +82,6 @@ Nếu XAMPP của bạn đặt mật khẩu cho MySQL `root`, hãy sửa biến 
 **Phiếu mượn (`html/history.php`, `js/history.js`)**
 - Danh sách phiếu: tìm theo mã phiếu / người mượn / thiết bị; lọc theo trạng thái và theo khoảng **ngày mượn** (Từ ngày – Đến ngày).
 - **Chi tiết phiếu**: xem đầy đủ thông tin người mượn, ngày mượn – hẹn trả – ngày trả thực tế, danh sách thiết bị và số lượng.
-- **In phiếu**: nút "In phiếu" (`window.print()`) với bản in riêng có tiêu đề và ô ký tên.
 - **Xóa / hủy phiếu** (`loan_delete`): chạy trong transaction; phiếu chưa trả bị xóa thì thiết bị tự hoàn lại kho.
 
 **Thống kê trang chủ (`html/main.php`, `js/main.js`, hàm `load_stats()` trong `api/data.php`)**

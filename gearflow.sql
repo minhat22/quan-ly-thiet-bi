@@ -33,7 +33,6 @@ CREATE TABLE IF NOT EXISTS ThietBi (
   ID       INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   Ten      VARCHAR(150) NOT NULL,
   Loai     VARCHAR(100) NOT NULL,
-  Icon     VARCHAR(20)  DEFAULT '▣',
   TongSo   INT UNSIGNED NOT NULL DEFAULT 0,   -- tổng số lượng trong kho
   BaoTri   INT UNSIGNED NOT NULL DEFAULT 0,   -- đang bảo trì
   INDEX idx_Ten  (Ten),
@@ -83,16 +82,6 @@ CREATE TABLE IF NOT EXISTS LichSuKho (
   INDEX idx_ThoiGian (ThoiGian)
 ) ENGINE=InnoDB;
 
--- ---------- Nhật ký hoạt động ----------
-CREATE TABLE IF NOT EXISTS HoatDong (
-  ID         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  Loai       ENUM('create','return') NOT NULL,
-  NguoiMuon  VARCHAR(100) NOT NULL,
-  TomTat     VARCHAR(255) NOT NULL,
-  ThoiGian   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_ThoiGian (ThoiGian)
-) ENGINE=InnoDB;
-
 -- =========================================================
 -- DỮ LIỆU MẪU
 -- =========================================================
@@ -111,12 +100,12 @@ INSERT INTO NguoiMuon (HoTen, DonVi, SDT) VALUES
 ('Lê Thảo Vy',      'Khoa Điện - Điện tử',     '0987654321');
 
 -- Thiết bị
-INSERT INTO ThietBi (Ten, Loai, Icon, TongSo, BaoTri) VALUES
-('Laptop Dell Latitude',  'Máy tính',                '💻', 12, 0),
-('Máy chiếu Epson',       'Thiết bị trình chiếu',    '📽️', 6, 0),
-('Bộ Arduino Uno',        'Thiết bị thực hành',      '🔌', 20, 0),
-('Camera Canon',          'Thiết bị ghi hình',       '📷', 4, 1),
-('Máy đo điện đa năng',   'Dụng cụ đo',              '🔧', 10, 0);
+INSERT INTO ThietBi (Ten, Loai, TongSo, BaoTri) VALUES
+('Laptop Dell Latitude', 'Máy tính', 12, 0),
+('Máy chiếu Epson', 'Thiết bị trình chiếu', 6, 0),
+('Bộ Arduino Uno', 'Thiết bị thực hành', 20, 0),
+('Camera Canon', 'Thiết bị ghi hình', 4, 1),
+('Máy đo điện đa năng', 'Dụng cụ đo', 10, 0);
 
 -- Phiếu mượn mẫu
 INSERT INTO PhieuMuon (ID_NguoiMuon, NgayMuon, HenTra, NgayTra, TrangThai) VALUES

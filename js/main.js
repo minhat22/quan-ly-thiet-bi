@@ -34,11 +34,16 @@ function renderChart(months) {
         let h1 = Math.round(m.borrowed * 100 / max);
         let h2 = Math.round(m.returned * 100 / max);
         return '<div class="bar-group">' +
-            '<div class="bar" style="height:' + h1 + '%" title="Phiếu mượn: ' + m.borrowed + '"></div>' +
-            '<div class="bar alt" style="height:' + h2 + '%" title="Phiếu trả: ' + m.returned + '"></div>' +
+            '<div class="bar" data-h="' + h1 + '" title="Phiếu mượn: ' + m.borrowed + '"></div>' +
+            '<div class="bar alt" data-h="' + h2 + '" title="Phiếu trả: ' + m.returned + '"></div>' +
             '<span class="bar-label">' + escapeHtml(m.label) + ' (' + m.borrowed + '/' + m.returned + ')</span>' +
             '</div>';
     }).join('');
+
+    // Chieu cao cot lay tu du lieu (data-h) nen gan bang JS, khong viet style trong HTML
+    box.querySelectorAll('[data-h]').forEach(function (bar) {
+        bar.style.height = bar.dataset.h + '%';
+    });
 
     // So sanh thang nay voi thang truoc
     let trend = document.getElementById('chartTrend');
@@ -72,8 +77,8 @@ function renderRank(id, rows, line) {
     box.innerHTML = rows.map(function (row, index) {
         return '<div class="rank-item">' +
             '<span class="rank-no">' + (index + 1) + '</span>' +
-            '<div class="rank-info"><strong>' + escapeHtml(row.name) + '</strong>' +
-            '<small>' + escapeHtml(line(row)) + '</small></div>' +
+            '<div class="rank-info"><p class="txt-strong">' + escapeHtml(row.name) + '</p>' +
+            '<p class="txt-small">' + escapeHtml(line(row)) + '</p></div>' +
             '</div>';
     }).join('');
 }
@@ -85,10 +90,10 @@ function renderStats() {
     renderChart(st.months);
 
     renderRank('topDevices', st.topDevices, function (row) {
-        return row.qty + ' thiết bị · ' + row.loans + ' phiếu';
+        return row.qty + ' thiết bị - ' + row.loans + ' phiếu';
     });
     renderRank('topBorrowers', st.topBorrowers, function (row) {
-        return row.unit + ' · ' + row.loans + ' phiếu';
+        return row.unit + ' - ' + row.loans + ' phiếu';
     });
 
     setText('totalLoans', st.totalLoans);
@@ -151,8 +156,8 @@ function renderPage() {
             return '<div class="activity-item">' +
                 '<img class="activity-icon" src="../images/' + icon + '" alt="">' +
                 '<div>' +
-                '<strong>' + title + '</strong>' +
-                '<p>' + escapeHtml(act.borrower) + ' · ' + escapeHtml(act.summary) + '</p>' +
+                '<p class="txt-strong">' + title + '</p>' +
+                '<p>' + escapeHtml(act.borrower) + ' - ' + escapeHtml(act.summary) + '</p>' +
                 '<time>' + formatTime(act.time) + '</time>' +
                 '</div>' +
                 '</div>';

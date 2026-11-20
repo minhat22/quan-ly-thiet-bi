@@ -12,7 +12,7 @@ function refresh_status(PDO $pdo): void {
 }
 function load_data(PDO $pdo): array {
     refresh_status($pdo);
-    $devices = $pdo->query("SELECT ID id, Ten name, Loai type, Icon icon, TongSo qty, BaoTri maintenance FROM ThietBi ORDER BY ID DESC")->fetchAll();
+    $devices = $pdo->query("SELECT ID id, Ten name, Loai type, TongSo qty, BaoTri maintenance FROM ThietBi ORDER BY ID DESC")->fetchAll();
     $loans = $pdo->query("SELECT p.ID id, n.HoTen borrower, n.DonVi unit, n.SDT phone, p.NgayMuon borrowDate, p.HenTra dueDate, COALESCE(p.NgayTra,'') returnDate, p.TrangThai status FROM PhieuMuon p JOIN NguoiMuon n ON n.ID=p.ID_NguoiMuon ORDER BY p.ID DESC")->fetchAll();
     foreach ($loans as &$loan) {
         $s = $pdo->prepare("SELECT c.ID_ThietBi deviceId, t.Ten name, c.SoLuong qty FROM ChiTietPhieu c JOIN ThietBi t ON t.ID=c.ID_ThietBi WHERE c.ID_Phieu=?");
@@ -21,7 +21,19 @@ function load_data(PDO $pdo): array {
         foreach ($loan['items'] as &$it) { $it['deviceId']=(int)$it['deviceId']; $it['qty']=(int)$it['qty']; } unset($it);
     } unset($loan);
     $stock = $pdo->query("SELECT l.ID_ThietBi deviceId,t.Ten deviceName,l.ThaoTac action,l.SoLuong amount,l.GhiChu note,l.ThoiGian time FROM LichSuKho l JOIN ThietBi t ON t.ID=l.ID_ThietBi ORDER BY l.ID DESC LIMIT 50")->fetchAll();
-    $activities = $pdo->query("SELECT Loai type,NguoiMuon borrower,TomTat summary,ThoiGian time FROM HoatDong ORDER BY ID DESC LIMIT 30")->fetchAll();
+    // Hoat dong gan day: suy ra tu PhieuMuon + ChiTietPhieu (khong can bang rieng)
+    $activities = $pdo->query("SELECT * FROM (
+        SELECT 'create' type, n.HoTen borrower,
+               (SELECT GROUP_CONCAT(CONCAT(c.SoLuong,' ',t.Ten) SEPARATOR ', ') FROM ChiTietPhieu c JOIN ThietBi t ON t.ID=c.ID_ThietBi WHERE c.ID_Phieu=p.ID) summary,
+               p.NgayMuon time, p.ID pid, 0 ord
+        FROM PhieuMuon p JOIN NguoiMuon n ON n.ID=p.ID_NguoiMuon
+        UNION ALL
+        SELECT 'return' type, n.HoTen borrower,
+               (SELECT GROUP_CONCAT(CONCAT(c.SoLuong,' ',t.Ten) SEPARATOR ', ') FROM ChiTietPhieu c JOIN ThietBi t ON t.ID=c.ID_ThietBi WHERE c.ID_Phieu=p.ID) summary,
+               p.NgayTra time, p.ID pid, 1 ord
+        FROM PhieuMuon p JOIN NguoiMuon n ON n.ID=p.ID_NguoiMuon WHERE p.NgayTra IS NOT NULL
+    ) a ORDER BY time DESC, ord DESC, pid DESC LIMIT 30")->fetchAll();
+    foreach ($activities as &$ac) { unset($ac['pid'], $ac['ord']); } unset($ac);
     $borrowers=$pdo->query("SELECT ID id,HoTen name,DonVi unit,SDT phone FROM NguoiMuon ORDER BY ID DESC")->fetchAll();
     return ['devices'=>$devices,'customer'=>$borrowers,'loans'=>$loans,'stockLog'=>$stock,'activities'=>$activities,'stats'=>load_stats($pdo)];
 }
@@ -40,7 +52,7 @@ function load_stats(PDO $pdo): array {
     $s->execute([$from]);
     foreach ($s->fetchAll() as $r) if (isset($months[$r['m']])) $months[$r['m']]['returned'] = (int)$r['c'];
 
-    $topDevices = $pdo->query("SELECT t.Ten name, t.Icon icon, COUNT(DISTINCT c.ID_Phieu) loans, SUM(c.SoLuong) qty FROM ChiTietPhieu c JOIN ThietBi t ON t.ID=c.ID_ThietBi GROUP BY t.ID, t.Ten, t.Icon ORDER BY qty DESC, loans DESC LIMIT 5")->fetchAll();
+    $topDevices = $pdo->query("SELECT t.Ten name, COUNT(DISTINCT c.ID_Phieu) loans, SUM(c.SoLuong) qty FROM ChiTietPhieu c JOIN ThietBi t ON t.ID=c.ID_ThietBi GROUP BY t.ID, t.Ten ORDER BY qty DESC, loans DESC LIMIT 5")->fetchAll();
     $topBorrowers = $pdo->query("SELECT n.HoTen name, n.DonVi unit, COUNT(*) loans FROM PhieuMuon p JOIN NguoiMuon n ON n.ID=p.ID_NguoiMuon GROUP BY n.ID, n.HoTen, n.DonVi ORDER BY loans DESC, n.HoTen LIMIT 5")->fetchAll();
     foreach ($topDevices as &$d) { $d['loans'] = (int)$d['loans']; $d['qty'] = (int)$d['qty']; } unset($d);
     foreach ($topBorrowers as &$b) { $b['loans'] = (int)$b['loans']; } unset($b);
@@ -63,10 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') json_error('Sai phương thức',405)
 $in=body_json(); $action=$in['action']??'';
 try {
   if ($action==='device_create' || $action==='device_update') {
-    $name=trim($in['name']??''); $type=trim($in['type']??''); $icon=trim($in['icon']??'▣'); $qty=(int)($in['qty']??0); $id=(int)($in['id']??0);
+    $name=trim($in['name']??''); $type=trim($in['type']??''); $qty=(int)($in['qty']??0); $id=(int)($in['id']??0);
     if($name===''||$type===''||$qty<0||$qty>100000) json_error('Thông tin thiết bị không hợp lệ');
-    if($action==='device_create') { $s=$pdo->prepare('INSERT INTO ThietBi(Ten,Loai,Icon,TongSo,BaoTri) VALUES(?,?,?,?,0)'); $s->execute([$name,$type,$icon,$qty]); }
-    else { $c=$pdo->prepare('SELECT TongSo,BaoTri FROM ThietBi WHERE ID=?');$c->execute([$id]);$old=$c->fetch();if(!$old)json_error('Không tìm thấy thiết bị',404);$b=$pdo->prepare("SELECT COALESCE(SUM(c.SoLuong),0) FROM ChiTietPhieu c JOIN PhieuMuon p ON p.ID=c.ID_Phieu WHERE c.ID_ThietBi=? AND p.NgayTra IS NULL");$b->execute([$id]);if($qty < (int)$old['BaoTri'] + (int)$b->fetchColumn())json_error('Tổng số không thể nhỏ hơn số đang mượn cộng số bảo trì');$s=$pdo->prepare('UPDATE ThietBi SET Ten=?,Loai=?,Icon=?,TongSo=? WHERE ID=?'); $s->execute([$name,$type,$icon,$qty,$id]); }
+    if($action==='device_create') { $s=$pdo->prepare('INSERT INTO ThietBi(Ten,Loai,TongSo,BaoTri) VALUES(?,?,?,0)'); $s->execute([$name,$type,$qty]); }
+    else { $c=$pdo->prepare('SELECT TongSo,BaoTri FROM ThietBi WHERE ID=?');$c->execute([$id]);$old=$c->fetch();if(!$old)json_error('Không tìm thấy thiết bị',404);$b=$pdo->prepare("SELECT COALESCE(SUM(c.SoLuong),0) FROM ChiTietPhieu c JOIN PhieuMuon p ON p.ID=c.ID_Phieu WHERE c.ID_ThietBi=? AND p.NgayTra IS NULL");$b->execute([$id]);if($qty < (int)$old['BaoTri'] + (int)$b->fetchColumn())json_error('Tổng số không thể nhỏ hơn số đang mượn cộng số bảo trì');$s=$pdo->prepare('UPDATE ThietBi SET Ten=?,Loai=?,TongSo=? WHERE ID=?'); $s->execute([$name,$type,$qty,$id]); }
   } elseif($action==='device_delete') {
     $id=(int)($in['id']??0); $c=$pdo->prepare("SELECT COUNT(*) FROM ChiTietPhieu c JOIN PhieuMuon p ON p.ID=c.ID_Phieu WHERE c.ID_ThietBi=? AND p.TrangThai<>'Đã trả'");$c->execute([$id]); if($c->fetchColumn())json_error('Thiết bị đang được mượn, không thể xóa');
     $c=$pdo->prepare('SELECT COUNT(*) FROM ChiTietPhieu WHERE ID_ThietBi=?');$c->execute([$id]);if($c->fetchColumn())json_error('Thiết bị đã có lịch sử mượn, không thể xóa');
@@ -95,9 +107,9 @@ try {
     $borrower=$borrowerRow['HoTen'];
     $merged=[];foreach($items as $it){$did=(int)($it['deviceId']??0);$q=(int)($it['qty']??0);if($did<1||$q<1){$pdo->rollBack();json_error('Thiết bị hoặc số lượng không hợp lệ');}$merged[$did]=($merged[$did]??0)+$q;}
     foreach($merged as $did=>$q){$s=$pdo->prepare('SELECT TongSo,BaoTri FROM ThietBi WHERE ID=? FOR UPDATE');$s->execute([$did]);$d=$s->fetch();if(!$d){$pdo->rollBack();json_error('Thiết bị không tồn tại');}$s=$pdo->prepare("SELECT COALESCE(SUM(c.SoLuong),0) FROM ChiTietPhieu c JOIN PhieuMuon p ON p.ID=c.ID_Phieu WHERE c.ID_ThietBi=? AND p.NgayTra IS NULL");$s->execute([$did]);$ready=(int)$d['TongSo']-(int)$d['BaoTri']-(int)$s->fetchColumn();if($q>$ready){$pdo->rollBack();json_error('Không đủ số lượng thiết bị trong kho.');}}
-    $s=$pdo->prepare('INSERT INTO PhieuMuon(ID_NguoiMuon,NgayMuon,HenTra,TrangThai) VALUES(?,?,?,?)');$s->execute([$bid,$bd,$due,$due<date('Y-m-d')?'Quá hạn':'Đang mượn']);$pid=$pdo->lastInsertId();$detail=$pdo->prepare('INSERT INTO ChiTietPhieu(ID_Phieu,ID_ThietBi,SoLuong) VALUES(?,?,?)');foreach($merged as $did=>$q)$detail->execute([$pid,$did,$q]);$sum=[];foreach($merged as $did=>$q){$s=$pdo->prepare('SELECT Ten FROM ThietBi WHERE ID=?');$s->execute([$did]);$sum[]=$q.' '.$s->fetchColumn();}$a=$pdo->prepare("INSERT INTO HoatDong(Loai,NguoiMuon,TomTat) VALUES('create',?,?)");$a->execute([$borrower,implode(', ',$sum)]);$pdo->commit();
+    $s=$pdo->prepare('INSERT INTO PhieuMuon(ID_NguoiMuon,NgayMuon,HenTra,TrangThai) VALUES(?,?,?,?)');$s->execute([$bid,$bd,$due,$due<date('Y-m-d')?'Quá hạn':'Đang mượn']);$pid=$pdo->lastInsertId();$detail=$pdo->prepare('INSERT INTO ChiTietPhieu(ID_Phieu,ID_ThietBi,SoLuong) VALUES(?,?,?)');foreach($merged as $did=>$q)$detail->execute([$pid,$did,$q]);$pdo->commit();
   } elseif($action==='loan_return') {
-    $id=(int)($in['id']??0);$pdo->beginTransaction();$s=$pdo->prepare("SELECT p.ID,n.HoTen FROM PhieuMuon p JOIN NguoiMuon n ON n.ID=p.ID_NguoiMuon WHERE p.ID=? FOR UPDATE");$s->execute([$id]);$p=$s->fetch();if(!$p){$pdo->rollBack();json_error('Không tìm thấy phiếu mượn',404);} $u=$pdo->prepare("UPDATE PhieuMuon SET NgayTra=CURDATE(),TrangThai='Đã trả' WHERE ID=? AND NgayTra IS NULL");$u->execute([$id]);if($u->rowCount()){$a=$pdo->prepare("INSERT INTO HoatDong(Loai,NguoiMuon,TomTat) VALUES('return',?,'Đã hoàn trả thiết bị')");$a->execute([$p['HoTen']]);}$pdo->commit();
+    $id=(int)($in['id']??0);$pdo->beginTransaction();$s=$pdo->prepare("SELECT p.ID,n.HoTen FROM PhieuMuon p JOIN NguoiMuon n ON n.ID=p.ID_NguoiMuon WHERE p.ID=? FOR UPDATE");$s->execute([$id]);$p=$s->fetch();if(!$p){$pdo->rollBack();json_error('Không tìm thấy phiếu mượn',404);} $u=$pdo->prepare("UPDATE PhieuMuon SET NgayTra=CURDATE(),TrangThai='Đã trả' WHERE ID=? AND NgayTra IS NULL");$u->execute([$id]);$pdo->commit();
   } elseif($action==='loan_delete') {
     // Xoa / huy phieu: ChiTietPhieu tu xoa theo (ON DELETE CASCADE). Ton kho tinh tu phieu chua tra nen tu hoan lai.
     $id=(int)($in['id']??0);

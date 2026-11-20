@@ -156,10 +156,10 @@ function openStockModal(id) {
     $('#modalFields').innerHTML = `
         <div class="form-group full">
             <label>Kho hiện tại</label>
-            <div style="font-size:13px;line-height:1.7">
-                Tổng <b>${device.qty}</b> ·
-                Đang mượn <b>${borrowedCount(device.id)}</b> ·
-                Bảo trì <b>${Number(device.maintenance || 0)}</b> ·
+            <div class="stock-summary">
+                Tổng <b>${device.qty}</b> /
+                Đang mượn <b>${borrowedCount(device.id)}</b> /
+                Bảo trì <b>${Number(device.maintenance || 0)}</b> /
                 Sẵn sàng <b>${readyCount(device)}</b>
             </div>
         </div>
@@ -260,7 +260,7 @@ function formatTime(t) {
     }
     let d = new Date(t);
     let pad = function (n) { return String(n).padStart(2, '0'); };
-    return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ' · ' +
+    return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ' - ' +
            pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
 }
 
@@ -331,8 +331,7 @@ const formFields = {
     device: [
         ['name', 'Tên thiết bị', 'text'],
         ['type', 'Loại thiết bị', 'text'],
-        ['qty', 'Số lượng', 'number'],
-        ['icon', 'Biểu tượng (emoji)', 'text']
+        ['qty', 'Số lượng', 'number']
     ],
 
     // Form nguoi muon
@@ -387,6 +386,8 @@ function openModal(type, item = null) {
             value = item[key] ?? '';
         } else if (key === 'qty') {
             value = 1;
+        } else if (key === 'borrowDate' && type === 'loan') {
+            value = new Date().toISOString().slice(0, 10);   // mac dinh: hom nay
         }
 
         let control = '';
@@ -419,12 +420,12 @@ function openModal(type, item = null) {
                         return `<option value="${borrower.id}">${escapeHtml(borrower.name)} — ${escapeHtml(borrower.unit)} — ${escapeHtml(borrower.phone)}</option>`;
                     }).join('')}
                 </select>
-                <small class="loan-borrower-hint">
+                <p class="loan-borrower-hint txt-small">
                     ${data.customer.length === 0
                         ? 'Danh sách hiện chưa có người mượn. '
-                        : 'Chỉ được chọn người đã có trong danh sách Người mượn. Nếu không thấy tên, '}
-                    <a href="customers.php" target="_blank" rel="noopener">thêm người mượn tại đây</a>.
-                </small>
+                        : 'Lưu ý bạn có thể thêm người được mượn '}
+                    <a href="customers.php" target="_blank" rel="noopener">tại đây</a>.
+                </p>
             `;
         }
 
@@ -495,7 +496,7 @@ function openModal(type, item = null) {
 
         html += `
 
-            <div class="form-group ${(key === 'unit' || kind === 'loanItems') ? 'full' : ''}">
+            <div class="form-group${(key === 'unit' || kind === 'loanItems' || (type === 'loan' && key === 'borrowerId')) ? ' full' : ''}${(type === 'loan' && (key === 'phone' || key === 'unit')) ? ' borrower-extra' : ''}">
 
                 <label>${label}</label>
 
@@ -520,12 +521,26 @@ function loanItemRowHtml() {
     }).join('');
 
     return `
-        <div class="loan-item" style="display:flex;gap:8px;margin-bottom:8px">
-            <select name="itemDevice" style="flex:1;min-width:0">${options}</select>
-            <input name="itemQty" type="number" min="1" value="1" style="width:84px;flex:none" required>
+        <div class="loan-item">
+            <select name="itemDevice" onchange="checkLoanRowStock(this)">${options}</select>
+            <input name="itemQty" type="number" min="1" value="1" required onchange="checkLoanRowStock(this)">
             <button type="button" class="action-btn" onclick="removeLoanItemRow(this)">Xóa</button>
         </div>
     `;
+}
+
+// Bao ngay khi nguoi dung nhap so luong vuot qua so luong con trong kho
+function checkLoanRowStock(el) {
+    const row = el.closest('.loan-item');
+    const device = data.devices.find(d => d.id === Number(row.querySelector('[name="itemDevice"]').value));
+    const qtyBox = row.querySelector('[name="itemQty"]');
+    if (!device) return;
+    const available = readyCount(device);
+    const qty = Number(qtyBox.value);
+    if (qty > available) {
+        alert('Không đủ số lượng thiết bị trong kho!\n\nThiết bị: ' + device.name + '\nSố lượng còn sẵn: ' + available + '\nSố lượng yêu cầu: ' + qty);
+        qtyBox.value = Math.max(1, available);
+    }
 }
 
 // Them mot dong thiet bi vao phieu muon
@@ -555,6 +570,14 @@ function fillBorrowerDetails(id) {
     const unitBox = document.querySelector('#modalFields input[name="unit"]');
     if (phoneBox) phoneBox.value = found ? found.phone : '';
     if (unitBox) unitBox.value = found ? found.unit : '';
+
+    // Chua chon nguoi muon: an SDT + Don vi (o chon nguoi muon rong het hang).
+    // Chon xong: hien SDT + Don vi (o chon nguoi muon con nua hang, SDT nam ben canh).
+    document.querySelectorAll('#modalFields .borrower-extra').forEach(function (group) {
+        group.classList.toggle('show', !!found);
+    });
+    const select = document.getElementById('loanBorrowerSelect');
+    if (select) select.closest('.form-group').classList.toggle('full', !found);
 }
 
 // Bam "Luu thong tin": luu phieu / thiet bi / nguoi muon
@@ -572,8 +595,7 @@ $('#modalForm').addEventListener('submit', async function (event) {
                 id: isEditingDevice ? Number(editing.id) : undefined,
                 name: String(obj.name || '').trim(),
                 type: String(obj.type || '').trim(),
-                qty: Number(obj.qty),
-                icon: String(obj.icon || '▣').trim()
+                qty: Number(obj.qty)
             });
         } else if (modalType === 'loan') {
             const borrowerId = Number(obj.borrowerId || 0);
@@ -585,6 +607,16 @@ $('#modalForm').addEventListener('submit', async function (event) {
             const ids = formData.getAll('itemDevice');
             const quantities = formData.getAll('itemQty');
             const items = ids.map((id, i) => ({ deviceId: Number(id), qty: Number(quantities[i]) }));
+
+            // Kiem tra ngay: ngay hen tra khong duoc truoc ngay muon
+            if (!obj.borrowDate || !obj.dueDate) {
+                alert('Vui lòng nhập đầy đủ Ngày mượn và Ngày hẹn trả.');
+                return;
+            }
+            if (obj.dueDate < obj.borrowDate) {
+                alert('Ngày hẹn trả không được trước ngày mượn!\n\nNgày mượn: ' + formatTime(obj.borrowDate) + '\nNgày hẹn trả: ' + formatTime(obj.dueDate));
+                return;
+            }
 
             // Kiem tra ton kho ngay tren giao dien de hien alert truoc khi gui yeu cau.
             // Cong don cac dong neu nguoi dung chon cung mot thiet bi nhieu lan.
@@ -691,36 +723,24 @@ function showLoanDetail(id) {
 
     box.innerHTML =
         '<div class="modal detail-modal">' +
-            '<div class="modal-head no-print">' +
+            '<div class="modal-head">' +
                 '<h3>Chi tiết phiếu mượn #' + loan.id + '</h3>' +
                 '<button class="close" onclick="closeDetail()"><span class="close-button">x</span></button>' +
             '</div>' +
-            '<div class="print-title">' +
-                '<h2>PHIẾU MƯỢN THIẾT BỊ</h2>' +
-                '<p>Mã phiếu: #' + loan.id + '</p>' +
-            '</div>' +
             '<div class="detail-info">' +
-                '<div><span>Người mượn</span><strong>' + escapeHtml(loan.borrower) + '</strong></div>' +
-                '<div><span>Đơn vị</span><strong>' + escapeHtml(loan.unit || '—') + '</strong></div>' +
-                '<div><span>Số điện thoại</span><strong>' + escapeHtml(loan.phone || '—') + '</strong></div>' +
-                '<div><span>Trạng thái</span><strong>' + escapeHtml(loan.status) + '</strong></div>' +
-                '<div><span>Ngày mượn</span><strong>' + formatTime(loan.borrowDate) + '</strong></div>' +
-                '<div><span>Hẹn trả</span><strong>' + formatTime(loan.dueDate) + '</strong></div>' +
-                '<div><span>Ngày trả thực tế</span><strong>' + (loan.returnDate ? formatTime(loan.returnDate) : 'Chưa trả') + '</strong></div>' +
-                '<div><span>Tổng số lượng</span><strong>' + totalQty + '</strong></div>' +
+                '<div><span>Người mượn</span><p class="txt-strong">' + escapeHtml(loan.borrower) + '</p></div>' +
+                '<div><span>Đơn vị</span><p class="txt-strong">' + escapeHtml(loan.unit || '—') + '</p></div>' +
+                '<div><span>Số điện thoại</span><p class="txt-strong">' + escapeHtml(loan.phone || '—') + '</p></div>' +
+                '<div><span>Trạng thái</span><p class="txt-strong">' + escapeHtml(loan.status) + '</p></div>' +
+                '<div><span>Ngày mượn</span><p class="txt-strong">' + formatTime(loan.borrowDate) + '</p></div>' +
+                '<div><span>Hẹn trả</span><p class="txt-strong">' + formatTime(loan.dueDate) + '</p></div>' +
+                '<div><span>Ngày trả thực tế</span><p class="txt-strong">' + (loan.returnDate ? formatTime(loan.returnDate) : 'Chưa trả') + '</p></div>' +
+                '<div><span>Tổng số lượng</span><p class="txt-strong">' + totalQty + '</p></div>' +
             '</div>' +
             '<table class="detail-table">' +
                 '<thead><tr><th>STT</th><th>Thiết bị</th><th>Số lượng</th></tr></thead>' +
                 '<tbody>' + itemRows + '</tbody>' +
             '</table>' +
-            '<div class="print-sign">' +
-                '<div><strong>Người mượn</strong><small>(Ký, ghi rõ họ tên)</small></div>' +
-                '<div><strong>Người cho mượn</strong><small>(Ký, ghi rõ họ tên)</small></div>' +
-            '</div>' +
-            '<div class="modal-actions no-print">' +
-                '<button type="button" class="btn btn-ghost" onclick="closeDetail()">Đóng</button>' +
-                '<button type="button" class="btn btn-primary" onclick="window.print()">In phiếu</button>' +
-            '</div>' +
         '</div>';
 
     box.classList.add('show');

@@ -7,7 +7,7 @@ function deviceRows(rows) {
             <tr>
                 <td>
                     <div class="device-cell">
-                        <div class="device-pic">${escapeHtml(device.icon || '▣')}</div>
+                        <img class="device-pic" src="../images/device-default-icon.png" alt="">
                         <div>
                             <b>${escapeHtml(device.name)}</b>
                         </div>
