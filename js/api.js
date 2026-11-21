@@ -1,9 +1,3 @@
-/* 
-   api.js  —  FILE DÙNG CHUNG cho TẤT CẢ trang
-   Nạp đầu tiên, trước core.js và các file riêng.
-   Chứa:  api()  và  dangXuat()
-*/
-
 //mọi lệnh gọi PHP đều đi qua đây (login, core, main, devices, history, observe, customers)
 async function api(url, method = 'GET', body = null) {
     let response;
