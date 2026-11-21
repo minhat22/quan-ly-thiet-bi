@@ -163,7 +163,7 @@ function renderBorrowerList(by) {
         list.innerHTML = borrowerShown.map(function (b, i) {
             return `<div class="combo-item${i === 0 ? ' active' : ''}" data-index="${i}" onmousedown="event.preventDefault(); pickBorrower(${b.id})">
                 <b>${escapeHtml(b.name)}</b>
-                <span>${escapeHtml(b.phone || '')}${b.unit ? ' · ' + escapeHtml(b.unit) : ''}</span>
+                <span>${escapeHtml(b.phone || '')}${b.unit ? ' - ' + escapeHtml(b.unit) : ''}</span>
             </div>`;
         }).join('');
     }
