@@ -31,7 +31,7 @@ if (isset($_SESSION['user_id'])) {
       </div>
       <div class="form-group">
         <label>Mật khẩu</label>
-        <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+        <input id="password" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" required>
       </div>
       <div id="loginError"></div>
       <button class="btn" type="submit">Đăng nhập</button>
