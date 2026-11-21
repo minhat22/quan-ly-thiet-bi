@@ -160,8 +160,6 @@
     </form>
   </div>
 </div>
-<div class="toast" id="toast"></div>
-
 <script src="../js/api.js?v=20261121-split-1"></script>
 <script src="../js/core.js?v=20261121-split-1"></script>
 <script src="../js/devices.js?v=20261121-split-1"></script>

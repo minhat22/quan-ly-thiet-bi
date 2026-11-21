@@ -226,9 +226,10 @@ try {
     $pdo->commit();
 
   } elseif($action==='loan_create') {
-    // Nguoi muon bat buoc phai la ho so da ton tai trong bang NguoiMuon.
-    // Tuyet doi khong tu dong tao moi nguoi muon tu du lieu form phieu.
+    // Nguoi muon: hoac chon ho so co san (borrowerId), hoac gui kem thong tin moi (newBorrower).
+    // Neu gui thong tin moi: so sanh theo SDT, trung thi dung ho so cu, khong trung thi tu them vao NguoiMuon.
     $bid=(int)($in['borrowerId']??0);
+    $nb=$in['newBorrower']??null;
     $bd=$in['borrowDate']??date('Y-m-d');
     $due=$in['dueDate']??'';
     $items=$in['items']??[];
@@ -238,16 +239,35 @@ try {
       return $d && $d->format('Y-m-d')===$value;
 
     };
-    if($bid<1||!$isDate($bd)||!$isDate($due)||$due<$bd||!is_array($items)||!count($items)) json_error('Vui lòng chọn người mượn có sẵn và nhập ngày mượn, ngày hẹn trả hợp lệ');
+    if(($bid<1&&!is_array($nb))||!$isDate($bd)||!$isDate($due)||$due<$bd||!is_array($items)||!count($items)) json_error('Vui lòng chọn hoặc nhập người mượn và nhập ngày mượn, ngày hẹn trả hợp lệ');
     $pdo->beginTransaction();
+    if($bid<1){
+      $nbName=trim($nb['name']??'');
+      $nbUnit=trim($nb['unit']??'');
+      $nbPhone=trim($nb['phone']??'');
+      if($nbName===''||$nbUnit===''||!preg_match('/^[0-9 .+]{9,15}$/',$nbPhone)||mb_strlen($nbName)>100||mb_strlen($nbUnit)>150){
+        $pdo->rollBack();
+        json_error('Vui lòng nhập họ tên, đơn vị và số điện thoại hợp lệ của người mượn mới');
+      }
+      $digits=preg_replace('/[^0-9+]/','',$nbPhone);
+      $s=$pdo->prepare("SELECT ID FROM NguoiMuon WHERE REPLACE(REPLACE(SDT,' ',''),'.','')=? FOR UPDATE");
+      $s->execute([$digits]);
+      $found=$s->fetchColumn();
+      if($found){
+        $bid=(int)$found;
+      } else {
+        $s=$pdo->prepare('INSERT INTO NguoiMuon(HoTen,DonVi,SDT) VALUES(?,?,?)');
+        $s->execute([$nbName,$nbUnit,$nbPhone]);
+        $bid=(int)$pdo->lastInsertId();
+      }
+    }
     $s=$pdo->prepare('SELECT ID,HoTen FROM NguoiMuon WHERE ID=? FOR UPDATE');
     $s->execute([$bid]);
     $borrowerRow=$s->fetch();
     if(!$borrowerRow){
       $pdo->rollBack();
-      json_error('Người mượn không tồn tại trong danh sách. Hãy thêm người này tại trang Người mượn trước.',422);
-      
-      }
+      json_error('Người mượn không tồn tại trong danh sách.',422);
+    }
     $borrower=$borrowerRow['HoTen'];
     $merged=[];
     foreach($items as $it){

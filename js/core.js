@@ -52,19 +52,6 @@ function $(selector) {
     return document.querySelector(selector);
 }
 
-// Hien thong bao nho o goc man hinh
-//mọi trang
-function toast(message) {
-    let toastBox = $('#toast');
-
-    toastBox.textContent = message;
-    toastBox.classList.add('show');
-
-    setTimeout(function () {
-        toastBox.classList.remove('show');
-    }, 3800);
-}
-
 // Chon mau cho tung trang thai
 // [Dùng ở: main.js, fullLoanRows]
 function statusClass(status) {
@@ -257,8 +244,8 @@ const formFields = {
     // Form phieu muon
     loan: [
         ['borrowerId', 'Người mượn', 'borrowerSelect'],
-        ['phone', 'Số điện thoại', 'readonly'],
-        ['unit', 'Đơn vị', 'readonly'],
+        ['phone', 'Số điện thoại', 'phoneSearch'],
+        ['unit', 'Đơn vị', 'unitInput'],
         ['items', 'Thiết bị mượn', 'loanItems'],
         ['borrowDate', 'Ngày mượn', 'date'],
         ['dueDate', 'Ngày hẹn trả', 'date']
@@ -307,24 +294,32 @@ function openModal(type, item = null) {
         // Chi cho phep chon nguoi muon da ton tai trong MySQL
         if (kind === 'borrowerSelect') {
             control = `
-                <select name="${key}" id="loanBorrowerSelect" onchange="fillBorrowerDetails(this.value)" required ${data.customer.length === 0 ? 'disabled' : ''}>
-                    <option value="">Chọn người mượn</option>
-                    ${data.customer.map(function (borrower) {
-                        return `<option value="${borrower.id}">${escapeHtml(borrower.name)} — ${escapeHtml(borrower.unit)} — ${escapeHtml(borrower.phone)}</option>`;
-                    }).join('')}
-                </select>
-                <p class="loan-borrower-hint txt-small">
-                    ${data.customer.length === 0
-                        ? 'Danh sách hiện chưa có người mượn. '
-                        : 'Lưu ý bạn có thể thêm người được mượn '}
-                    <a href="customers.php" target="_blank" rel="noopener">tại đây</a>.
-                </p>
+                <div class="combo" id="borrowerCombo">
+                    <input type="text" name="borrowerName" id="loanBorrowerSearch" autocomplete="off"
+                        placeholder="${data.customer.length === 0 ? 'Nhập tên người mượn' : 'Gõ tên để tìm'}"
+                        oninput="onBorrowerSearchInput()" onfocus="showBorrowerList()"
+                        onkeydown="onBorrowerKeydown(event)">
+                    <input type="hidden" name="${key}" id="loanBorrowerId" value="">
+                    <div class="combo-list" id="borrowerList"></div>
+                </div>
+                
             `;
         }
 
-        // Thong tin nguoi muon tu dong dien, khong cho sua tai form phieu
-        else if (kind === 'readonly') {
-            control = `<input name="${key}" type="text" value="" readonly placeholder="Tự động lấy từ hồ sơ người mượn">`;
+        // O so dien thoai: cung go de tim, chon xong tu dien ten + don vi
+        else if (kind === 'phoneSearch') {
+            control = `<input name="${key}" id="loanPhoneSearch" type="text" inputmode="tel" autocomplete="off"
+                placeholder="Nhập số điện thoại..."
+                oninput="onBorrowerSearchInput('phone')" onfocus="showBorrowerList('phone')"
+                onkeydown="onBorrowerKeydown(event)">`;
+        }
+
+        // Don vi: tu dien khi chon nguoi co san, con nguoi moi thi tu nhap / chon goi y
+        else if (kind === 'unitInput') {
+            control = `
+                <input name="${key}" type="text" list="unitOptions" autocomplete="off" >
+                <datalist id="unitOptions">${unitList.map(function (u) { return `<option value="${escapeHtml(u)}">`; }).join('')}</datalist>
+            `;
         }
 
         // Khoi chon nhieu thiet bi cho phieu muon
@@ -351,7 +346,7 @@ function openModal(type, item = null) {
 
         html += `
 
-            <div class="form-group${(key === 'unit' || kind === 'loanItems' || (type === 'loan' && key === 'borrowerId')) ? ' full' : ''}${(type === 'loan' && (key === 'phone' || key === 'unit')) ? ' borrower-extra' : ''}">
+            <div class="form-group${(key === 'unit' || kind === 'loanItems') ? ' full' : ''}">
 
                 <label>${label}</label>
 
@@ -399,11 +394,30 @@ $('#modalForm').addEventListener('submit', async function (event) {
             });
             saveNotice = res && res.notice ? res.notice : '';
         } else if (modalType === 'loan') {
-            const borrowerId = Number(obj.borrowerId || 0);
-            const borrowerExists = data.customer.some(person => Number(person.id) === borrowerId);
-            if (!borrowerExists) {
-                toast('Người này chưa có trong danh sách Người mượn. Hãy thêm hồ sơ ở trang Người mượn trước khi tạo phiếu.');
-                return;
+            let borrowerId = Number(obj.borrowerId || 0);
+            let newBorrower = null;
+            if (!data.customer.some(person => Number(person.id) === borrowerId)) {
+                // Chua chon ho so co san -> coi la nguoi muon moi, kiem tra thong tin nhap tay
+                borrowerId = 0;
+                const nbName = String(obj.borrowerName || '').trim();
+                const nbPhone = String(obj.phone || '').trim();
+                const nbUnit = String(obj.unit || '').trim();
+                if (!nbName || !nbPhone || !nbUnit) {
+                    alert('Vui lòng nhập đủ Tên, Số điện thoại và Đơn vị (hoặc chọn người mượn có sẵn).');
+                    return;
+                }
+                if (!/^[0-9 .+]{9,15}$/.test(nbPhone)) {
+                    alert('Số điện thoại gồm 9 đến 15 chữ số');
+                    return;
+                }
+                // SDT trung ho so cu (phong khi chua kip tu dong chon) -> dung ho so cu
+                const dup = findBorrowerByPhone(nbPhone);
+                if (dup) {
+                    borrowerId = dup.id;
+                } else {
+                    newBorrower = { name: nbName, phone: nbPhone, unit: nbUnit };
+                    saveNotice = 'Đã lưu phiếu và thêm "' + nbName + '" vào danh sách Người mượn';
+                }
             }
             const ids = formData.getAll('itemDevice');
             const quantities = formData.getAll('itemQty');
@@ -444,10 +458,10 @@ $('#modalForm').addEventListener('submit', async function (event) {
             }
 
             // Server van kiem tra lai trong transaction de tranh truong hop ton kho thay doi dong thoi.
-            await api('../api/data.php','POST',{action:'loan_create',borrowerId,borrowDate:obj.borrowDate,dueDate:obj.dueDate,items});
+            await api('../api/data.php','POST',{action:'loan_create',borrowerId,newBorrower,borrowDate:obj.borrowDate,dueDate:obj.dueDate,items});
         }
         await reloadData(); closeModal(); render(); 
-        toast(saveNotice || 'Đã lưu thông tin vào MySQL');
+        alert(saveNotice || 'Đã lưu thông tin vào MySQL');
     } catch (error) {
         // Khi số lượng yêu cầu vượt quá số lượng còn sẵn trong kho,
         // hiển thị alert đơn giản để người dùng nhận biết ngay.
@@ -457,7 +471,7 @@ $('#modalForm').addEventListener('submit', async function (event) {
             alert('Không đủ số lượng thiết bị trong kho!\n\n' + message);
         } else {
             console.error('GearFlow: không thể lưu dữ liệu:', error);
-            toast(message);
+            alert(message);
         }
     }
 });
@@ -491,9 +505,9 @@ function editItem(type, id) {
 async function markReturned(id) {
     try { 
     await api('../api/data.php','POST',{action:'loan_return',id}); 
-    await reloadData(); render(); toast('Đã xác nhận hoàn trả thiết bị'); 
+    await reloadData(); render(); alert('Đã xác nhận hoàn trả thiết bị'); 
 }
-    catch(error) { toast(error.message); 
+    catch(error) { alert(error.message); 
         
     }
 }
@@ -572,4 +586,4 @@ $('#today').textContent = new Intl.DateTimeFormat('vi-VN', {
 }).format(today);
 
 // Nạp dữ liệu tập trung từ MySQL khi trang khởi chạy.
-(async function startGearFlow(){ try { await reloadData(); render(); } catch(error) { toast(error.message); } })();
+(async function startGearFlow(){ try { await reloadData(); render(); } catch(error) { alert(error.message); } })();

@@ -52,7 +52,7 @@ async function taiDanhSach() {
             fillRows(borrowerRows(danhSach));
         }
     } catch (loi) {
-        toast(loi.message);
+        alert(loi.message);
     }
 }
 
@@ -128,10 +128,10 @@ async function xoaNguoiMuon(id) {
 
     try {
         await api('../api/borrowers.php', 'POST', { action: 'delete', id: id });
-        toast('Đã xóa người mượn');
+        alert('Đã xóa người mượn');
         taiDanhSach();
     } catch (loi) {
-        toast(loi.message);
+        alert(loi.message);
     }
 }
 
@@ -156,11 +156,11 @@ form.addEventListener('submit', async function (e) {
         });
 
         closeModal();
-        toast(dangSua === null ? 'Đã thêm người mượn' : 'Đã cập nhật người mượn');
+        alert(dangSua === null ? 'Đã thêm người mượn' : 'Đã cập nhật người mượn');
         dangSua = null;
         taiDanhSach();
     } catch (loi) {
-        toast(loi.message);
+        alert(loi.message);
     }
 });
 

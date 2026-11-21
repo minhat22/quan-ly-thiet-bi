@@ -164,10 +164,10 @@ function openStockModal(id) {
 // [RIÊNG devices.php] nút "Xóa" trong deviceRows (gọi api action device_delete)
 // Xoa thiet bi / nguoi muon (co hoi xac nhan)
 async function deleteItem(type, id) {
-    if (type !== 'device') { toast('Quản lý người mượn tại trang Người mượn'); return; }
+    if (type !== 'device') { alert('Quản lý người mượn tại trang Người mượn'); return; }
     if (!confirm('Bạn có chắc muốn xóa thiết bị này?')) return;
-    try { await api('../api/data.php','POST',{action:'device_delete',id}); await reloadData(); render(); toast('Đã xóa thiết bị'); }
-    catch(error) { toast(error.message); }
+    try { await api('../api/data.php','POST',{action:'device_delete',id}); await reloadData(); render(); alert('Đã xóa thiết bị'); }
+    catch(error) { alert(error.message); }
 }
 
 // Chay khi mo trang

@@ -65,7 +65,7 @@ function loanItemRowHtml() {
         <div class="loan-item">
             <select name="itemDevice" onchange="checkLoanRowStock(this)">${options}</select>
             <input name="itemQty" type="number" min="1" value="1" required onchange="checkLoanRowStock(this)">
-            <button type="button" class="action-btn" onclick="removeLoanItemRow(this)">Xóa</button>
+            
         </div>
     `;
 }
@@ -95,30 +95,173 @@ function addLoanItemRow() {
 // [RIÊNG history.php] nút Xóa dòng thiết bị trong form phiếu
 function removeLoanItemRow(button) {
     if (document.querySelectorAll('#loanItems .loan-item').length <= 1) {
-        toast('Phiếu mượn cần ít nhất 1 thiết bị');
+        alert('Phiếu mượn cần ít nhất 1 thiết bị');
         return;
     }
 
     button.closest('.loan-item').remove();
 }
 
-// Chon ma nguoi muon trong danh sach MySQL va tu dien thong tin tu ho so
-// [RIÊNG history.php] chọn người mượn -> tự điền SĐT, Đơn vị
-function fillBorrowerDetails(id) {
-    const found = data.customer.find(b => Number(b.id) === Number(id));
-    const phoneBox = document.querySelector('#modalFields input[name="phone"]');
-    const unitBox = document.querySelector('#modalFields input[name="unit"]');
-    if (phoneBox) phoneBox.value = found ? found.phone : '';
-    if (unitBox) unitBox.value = found ? found.unit : '';
-
-    // Chua chon nguoi muon: an SDT + Don vi (o chon nguoi muon rong het hang).
-    // Chon xong: hien SDT + Don vi (o chon nguoi muon con nua hang, SDT nam ben canh).
-    document.querySelectorAll('#modalFields .borrower-extra').forEach(function (group) {
-        group.classList.toggle('show', !!found);
-    });
-    const select = document.getElementById('loanBorrowerSelect');
-    if (select) select.closest('.form-group').classList.toggle('full', !found);
+// ===== O CHON NGUOI MUON DANG GO TIM (combobox) =====
+// Bo dau tieng Viet + chu thuong de tim "ngoc" van ra "Ngọc"
+// [RIÊNG history.php]
+function normalizeText(text) {
+    return String(text || '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+        .toLowerCase().trim();
 }
+
+// Chuan hoa SDT: bo khoang trang, dau cham
+function cleanPhone(p) { return String(p || '').replace(/[^0-9+]/g, ''); }
+
+// Tim ho so nguoi muon theo SDT (so sanh sau khi chuan hoa)
+function findBorrowerByPhone(phone) {
+    const c = cleanPhone(phone);
+    if (c.length < 9) return null;
+    return data.customer.find(b => cleanPhone(b.phone) === c) || null;
+}
+
+// Ghi chu trang thai duoi o nguoi muon
+function setBorrowerStatus(text, kind) {
+    const el = document.getElementById('borrowerStatus');
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = kind === 'dup' ? '#d97706' : (kind === 'new' ? '#16a34a' : '');
+}
+
+// Vi tri dong dang duoc tô sáng trong danh sach (de dung phim mui ten)
+let borrowerActiveIndex = -1;
+// Danh sach dang hien (da loc)
+let borrowerShown = [];
+// Truong dang go: 'name' hoac 'phone'
+let borrowerSearchBy = 'name';
+
+// Loc danh sach theo chu dang go roi ve lai
+// [RIÊNG history.php]
+function renderBorrowerList(by) {
+    const list = document.getElementById('borrowerList');
+    if (!list) return;
+    borrowerSearchBy = by || borrowerSearchBy;
+
+    const nameBox = document.getElementById('loanBorrowerSearch');
+    const phoneBox = document.getElementById('loanPhoneSearch');
+    const keyword = normalizeText(borrowerSearchBy === 'phone' ? phoneBox.value : nameBox.value);
+    const phoneKeyword = (phoneBox.value || '').replace(/[\s.]/g, '');
+
+    borrowerShown = data.customer.filter(function (b) {
+        if (borrowerSearchBy === 'phone') {
+            return phoneKeyword === '' || String(b.phone || '').replace(/[\s.]/g, '').includes(phoneKeyword);
+        }
+        return keyword === '' || normalizeText(b.name).includes(keyword);
+    });
+    borrowerActiveIndex = borrowerShown.length ? 0 : -1;
+
+    if (borrowerShown.length === 0) {
+        list.innerHTML = '<div class="combo-empty">Chưa có người này – nhập SĐT và đơn vị để thêm mới</div>';
+    } else {
+        list.innerHTML = borrowerShown.map(function (b, i) {
+            return `<div class="combo-item${i === 0 ? ' active' : ''}" data-index="${i}" onmousedown="event.preventDefault(); pickBorrower(${b.id})">
+                <b>${escapeHtml(b.name)}</b>
+                <span>${escapeHtml(b.phone || '')}${b.unit ? ' · ' + escapeHtml(b.unit) : ''}</span>
+            </div>`;
+        }).join('');
+    }
+    list.classList.add('show');
+}
+
+// Mo danh sach khi bam vao o
+function showBorrowerList(by) { renderBorrowerList(by || 'name'); }
+
+// Moi lan go chu: bo lua chon cu va loc lai danh sach
+function onBorrowerSearchInput(by) {
+    const idBox = document.getElementById('loanBorrowerId');
+    if (idBox && idBox.value !== '') {
+        // Dang sua lai sau khi da chon -> huy lua chon cu
+        idBox.value = '';
+        setBorrowerExtra(null);
+        // Xoa o con lai de khong bi lech thong tin
+        const other = document.getElementById(by === 'phone' ? 'loanBorrowerSearch' : 'loanPhoneSearch');
+        if (other) other.value = '';
+    }
+    if (by === 'phone') checkPhoneDuplicate();
+    else renderBorrowerList('name');
+}
+
+// Dang go SDT: trung ho so cu thi bao + tu chon; chua co thi bao se them moi
+let lastDupNotified = null;
+function checkPhoneDuplicate() {
+    const phoneBox = document.getElementById('loanPhoneSearch');
+    const clean = cleanPhone(phoneBox.value);
+    const found = findBorrowerByPhone(phoneBox.value);
+    if (found) {
+        if (lastDupNotified !== found.id) {
+            lastDupNotified = found.id;
+            alert('Trùng SĐT với người mượn "' + found.name + '" – đã tự điền thông tin từ hồ sơ.');
+        }
+        pickBorrower(found.id, true);
+        setBorrowerStatus('Trùng SĐT: đã dùng hồ sơ có sẵn của ' + found.name + '.', 'dup');
+        return;
+    }
+    lastDupNotified = null;
+    renderBorrowerList('phone');
+    if (clean.length >= 9) setBorrowerStatus('SĐT chưa có trong hệ thống: sẽ tự thêm vào mục Người mượn khi lưu phiếu.', 'new');
+    else setBorrowerStatus('Nhập SĐT: nếu đã có hồ sơ sẽ tự điền, nếu chưa có sẽ tự thêm vào mục Người mượn khi lưu phiếu.');
+}
+
+// Phim mui ten / Enter / Esc trong danh sach
+function onBorrowerKeydown(event) {
+    const list = document.getElementById('borrowerList');
+    if (!list || !list.classList.contains('show')) return;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        if (!borrowerShown.length) return;
+        borrowerActiveIndex = (borrowerActiveIndex + (event.key === 'ArrowDown' ? 1 : -1) + borrowerShown.length) % borrowerShown.length;
+        list.querySelectorAll('.combo-item').forEach(function (el, i) {
+            el.classList.toggle('active', i === borrowerActiveIndex);
+            if (i === borrowerActiveIndex) el.scrollIntoView({ block: 'nearest' });
+        });
+    } else if (event.key === 'Enter') {
+        if (borrowerActiveIndex >= 0) {
+            event.preventDefault();
+            pickBorrower(borrowerShown[borrowerActiveIndex].id);
+        }
+    } else if (event.key === 'Escape') {
+        list.classList.remove('show');
+    }
+}
+
+// Chon mot nguoi trong danh sach -> dien ten, SDT, don vi
+function pickBorrower(id, fromPhone) {
+    const found = data.customer.find(b => Number(b.id) === Number(id));
+    if (!found) return;
+    document.getElementById('loanBorrowerId').value = found.id;
+    document.getElementById('loanBorrowerSearch').value = found.name;
+    if (!fromPhone) document.getElementById('loanPhoneSearch').value = found.phone || '';
+    setBorrowerExtra(found);
+    document.getElementById('borrowerList').classList.remove('show');
+    if (!fromPhone) setBorrowerStatus('Đã chọn hồ sơ có sẵn của ' + found.name + '.', 'dup');
+}
+
+// Chon nguoi co san: dien + khoa Don vi; bo chon: mo khoa va xoa
+function setBorrowerExtra(found) {
+    const unitBox = document.querySelector('#modalFields input[name="unit"]');
+    if (!unitBox) return;
+    unitBox.value = found ? (found.unit || '') : '';
+    unitBox.readOnly = !!found;
+    if (!found) {
+        lastDupNotified = null;
+        setBorrowerStatus('Nhập SĐT: nếu đã có hồ sơ sẽ tự điền, nếu chưa có sẽ tự thêm vào mục Người mượn khi lưu phiếu.');
+    }
+}
+
+// Bam ra ngoai thi dong danh sach goi y
+document.addEventListener('mousedown', function (e) {
+    const list = document.getElementById('borrowerList');
+    if (list && !e.target.closest('#borrowerCombo') && e.target.id !== 'loanPhoneSearch') {
+        list.classList.remove('show');
+    }
+});
 
 // Xoa / huy phieu muon (co hoi xac nhan)
 // [RIÊNG history.php] nút Xóa chỉ hiện khi currentPage === "loans" (xem fullLoanRows)
@@ -138,9 +281,9 @@ async function deleteLoan(id) {
         await api('../api/data.php', 'POST', { action: 'loan_delete', id: Number(id) });
         await reloadData();
         render();
-        toast('Đã xóa phiếu mượn #' + id);
+        alert('Đã xóa phiếu mượn #' + id);
     } catch (error) {
-        toast(error.message);
+        alert(error.message);
     }
 }
 

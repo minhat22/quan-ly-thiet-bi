@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="main.css?v=20261120-clean-8">
+<link rel="stylesheet" href="main.css?v=20261121-combo-3">
 
 </head>
 <body data-page="loans">
@@ -142,11 +142,9 @@
     </form>
   </div>
 </div>
-<div class="toast" id="toast"></div>
-
-<script src="../js/api.js?v=20261121-split-1"></script>
-<script src="../js/core.js?v=20261121-split-1"></script>
-<script src="../js/history.js?v=20261121-split-1"></script>
+<script src="../js/api.js?v=20261121-combo-3"></script>
+<script src="../js/core.js?v=20261121-combo-3"></script>
+<script src="../js/history.js?v=20261121-combo-3"></script>
 
 </body>
 </html>
