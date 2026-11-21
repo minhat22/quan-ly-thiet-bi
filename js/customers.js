@@ -1,16 +1,16 @@
+/*
+   customers.js  —  FILE RIÊNG cho trang NGƯỜI MƯỢN (customers.php)
+   RIÊNG của trang này:  danhSach, dangSua, hen, borrowerRows, taiDanhSach,
+       filterRows, suaNguoiMuon, themNguoiMuon, xoaNguoiMuon, bộ xử lý submit, renderPage
+*/
 
 let danhSach = [];     // danh sách người mượn lấy từ server
 let dangSua = null;    // mã người đang được sửa
 let hen = null;        // bộ hẹn giờ cho ô tìm kiếm
 
 // Đổi ký tự đặc biệt để chèn an toàn vào HTML (chống XSS)
-function thoatHtml(chu) {
-    return String(chu).replace(/[&<>"']/g, function (kyTu) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[kyTu];
-    });
-}
-
 // Các dòng của bảng người mượn
+// [RIÊNG customers.php]
 function borrowerRows(rows) {
     return rows.map(function (nguoi) {
         let chuCai = nguoi.hoTen.trim().split(' ').slice(-2).map(function (tu) {
@@ -21,13 +21,13 @@ function borrowerRows(rows) {
             <tr>
                 <td>
                     <div class="device-cell">
-                        <div class="avatar">${thoatHtml(chuCai)}</div>
-                        <b>${thoatHtml(nguoi.hoTen)}</b>
+                        <div class="avatar">${escapeHtml(chuCai)}</div>
+                        <b>${escapeHtml(nguoi.hoTen)}</b>
                     </div>
                 </td>
                 <td>NM-${String(nguoi.id).padStart(3, '0')}</td>
-                <td>${thoatHtml(nguoi.donVi)}</td>
-                <td>${thoatHtml(nguoi.sdt)}</td>
+                <td>${escapeHtml(nguoi.donVi)}</td>
+                <td>${escapeHtml(nguoi.sdt)}</td>
                 <td>
                     <button class="action-btn" onclick="suaNguoiMuon(${Number(nguoi.id)})">Sửa</button>
                     <button class="action-btn" onclick="xoaNguoiMuon(${Number(nguoi.id)})">Xóa</button>
@@ -38,6 +38,7 @@ function borrowerRows(rows) {
 }
 
 // Lấy danh sách từ server (kèm từ khóa tìm kiếm) rồi vẽ bảng
+// [RIÊNG customers.php] gọi api/borrowers.php?q=...
 async function taiDanhSach() {
     let o = document.getElementById('searchBox');
     let tuKhoa = o ? o.value.trim() : '';
@@ -56,12 +57,14 @@ async function taiDanhSach() {
 }
 
 // Gọi từ ô tìm kiếm: đợi người dùng gõ xong 0,3 giây mới hỏi server
+// [RIÊNG customers.php] (devices.js và history.js cũng có filterRows riêng, cùng tên nhưng khác nội dung)
 function filterRows() {
     clearTimeout(hen);
     hen = setTimeout(taiDanhSach, 300);
 }
 
 // Mở form sửa người mượn
+// [RIÊNG customers.php]
 function suaNguoiMuon(id) {
     let nguoi = danhSach.find(function (n) {
         return Number(n.id) === id;
@@ -84,18 +87,18 @@ function suaNguoiMuon(id) {
     document.getElementById('modalFields').innerHTML = `
         <div class="form-group">
             <label>Họ và tên</label>
-            <input name="hoTen" value="${thoatHtml(nguoi.hoTen)}" required>
+            <input name="hoTen" value="${escapeHtml(nguoi.hoTen)}" required>
         </div>
         <div class="form-group">
             <label>Số điện thoại</label>
-            <input name="sdt" type="tel" value="${thoatHtml(nguoi.sdt)}"
+            <input name="sdt" type="tel" value="${escapeHtml(nguoi.sdt)}"
                    pattern="[0-9 .+]{9,15}" title="Số điện thoại gồm 9 đến 15 chữ số" required>
         </div>
         <div class="form-group full">
             <label>Đơn vị</label>
             <select name="donVi">
                 ${donViList.map(function (donVi) {
-                    return `<option value="${thoatHtml(donVi)}" ${donVi === nguoi.donVi ? 'selected' : ''}>${thoatHtml(donVi)}</option>`;
+                    return `<option value="${escapeHtml(donVi)}" ${donVi === nguoi.donVi ? 'selected' : ''}>${escapeHtml(donVi)}</option>`;
                 }).join('')}
             </select>
         </div>
@@ -105,6 +108,7 @@ function suaNguoiMuon(id) {
 }
 
 // Admin/nhân viên đã đăng nhập có thể thêm người mượn; người mượn không cần tài khoản đăng nhập.
+// [RIÊNG customers.php]
 function themNguoiMuon() {
     dangSua = null;
     document.getElementById('modalTitle').textContent = 'Thêm người mượn';
@@ -116,6 +120,7 @@ function themNguoiMuon() {
 }
 
 // Xóa người mượn (server sẽ chặn nếu người này có phiếu mượn)
+// [RIÊNG customers.php]
 async function xoaNguoiMuon(id) {
     if (!confirm('Bạn có chắc muốn xóa người mượn này?')) {
         return;
@@ -160,6 +165,7 @@ form.addEventListener('submit', async function (e) {
 });
 
 // Do du lieu vao trang (core.js goi ham nay trong render)
+// [RIÊNG customers.php] core.render() gọi hàm này
 function renderPage() {
     taiDanhSach();
 }

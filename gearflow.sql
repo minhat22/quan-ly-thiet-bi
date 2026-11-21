@@ -120,3 +120,24 @@ INSERT INTO ChiTietPhieu (ID_Phieu, ID_ThietBi, SoLuong) VALUES
 (1, 1, 2),
 (2, 2, 1),
 (3, 3, 3);
+
+-- =========================================================
+-- Cập nhật CSDL gearflow đang chạy: thêm cột Model cho ThietBi
+-- Chạy 1 lần trong phpMyAdmin (tab SQL), KHÔNG mất dữ liệu cũ.
+-- =========================================================
+USE gearflow;
+
+-- 1) Thêm cột Model (tạm cho phép rỗng để không lỗi với dữ liệu cũ)
+ALTER TABLE ThietBi ADD COLUMN Model VARCHAR(100) NOT NULL DEFAULT '' AFTER Ten;
+
+-- 2) Gán model cho thiết bị đã có (sửa lại theo thực tế nếu muốn)
+UPDATE ThietBi SET Model = 'Latitude 5420'  WHERE Ten = 'Laptop Dell Latitude';
+UPDATE ThietBi SET Model = 'EB-X06'         WHERE Ten = 'Máy chiếu Epson';
+UPDATE ThietBi SET Model = 'Arduino Uno R3' WHERE Ten = 'Bộ Arduino Uno';
+UPDATE ThietBi SET Model = 'EOS 200D'       WHERE Ten = 'Camera Canon';
+UPDATE ThietBi SET Model = 'DT-830B'        WHERE Ten = 'Máy đo điện đa năng';
+-- Dòng nào còn rỗng thì đặt tạm theo ID để không bị trùng
+UPDATE ThietBi SET Model = CONCAT('MODEL-', ID) WHERE Model = '';
+
+-- 3) Model phải là duy nhất (đây là chìa khóa để nhập kho cộng dồn)
+ALTER TABLE ThietBi ADD UNIQUE KEY uq_Model (Model);

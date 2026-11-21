@@ -39,7 +39,7 @@ if (isset($_SESSION['user_id'])) {
   </div>
 </div>
 
-<script src="../js/api.js"></script>
+<script src="../js/api.js?v=20261121-split-1"></script>
 
 <script>
 document.getElementById('loginForm').addEventListener('submit', async function (e) {
