@@ -1,8 +1,9 @@
-
-// main.js - rieng cho TRANG CHU (main.php)
-// Nap sau core.js
+/*
+   main.js  —  FILE RIÊNG cho TRANG CHỦ (main.php)
+*/
 
 // Cac dong bang "Phieu muon gan day"
+// [RIÊNG main.php] bảng "Phiếu mượn gần đây" (bản gọn, khác fullLoanRows của core)
 function loanRows(rows) {
     return rows.map(function (loan) {
         return `
@@ -21,6 +22,7 @@ function loanRows(rows) {
 }
 
 // Ve bieu do cot 6 thang tu so lieu that (chieu cao tinh theo % cua gia tri lon nhat)
+// [RIÊNG main.php]
 function renderChart(months) {
     let box = document.getElementById('loanChart');
     if (box === null) return;
@@ -65,6 +67,7 @@ function renderChart(months) {
 }
 
 // Danh sach xep hang (top thiet bi / top nguoi muon)
+// [RIÊNG main.php]
 function renderRank(id, rows, line) {
     let box = document.getElementById(id);
     if (box === null) return;
@@ -84,6 +87,7 @@ function renderRank(id, rows, line) {
 }
 
 // Do thong ke that tu API vao trang chu
+// [RIÊNG main.php]
 function renderStats() {
     let st = data.stats;
 
@@ -104,6 +108,7 @@ function renderStats() {
 }
 
 // Do du lieu vao trang chu
+// [RIÊNG main.php] core.render() gọi hàm này
 function renderPage() {
     renderStats();
 

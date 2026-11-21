@@ -1,6 +1,9 @@
-// observe.js - rieng cho THEO DOI TRA (observe.php) (nap sau core.js)
+/*
+   observe.js  —  FILE RIÊNG cho trang THEO DÕI TRẢ (observe.php)
+*/
 
 // Do thong ke va danh sach phieu chua tra
+// [RIÊNG observe.php] core.render() gọi hàm này
 function renderPage() {
     let pending = data.loans.filter(function (loan) {
         return loan.status !== 'Đã trả';
